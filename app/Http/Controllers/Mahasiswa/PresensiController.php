@@ -35,7 +35,7 @@ class PresensiController extends Controller
                 ->where('mahasiswa_id', $mahasiswa->id)
                 ->where('status', 'approved')
             );
-        })->with(['mataKuliah', 'dosen.user'])->get();
+        })->with(['mataKuliah', 'dosen.user', 'jadwal'])->get();
 
         // Get rekap for each kelas
         $rekapList = $kelasList->map(function ($kelas) use ($mahasiswa) {

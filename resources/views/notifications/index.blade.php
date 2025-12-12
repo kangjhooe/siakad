@@ -10,7 +10,7 @@
         @if($unreadCount > 0)
         <form action="{{ route('notifications.mark-all-read') }}" method="POST">
             @csrf
-            <button type="submit" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50">
+            <button type="submit" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white text-indigo-600 hover:bg-indigo-50">
                 Tandai Semua Dibaca
             </button>
         </form>

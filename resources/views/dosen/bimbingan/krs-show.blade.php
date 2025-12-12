@@ -48,9 +48,9 @@
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-sm text-siakad-secondary">Status KRS</span>
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize
-                            {{ $krs->status == 'approved' ? 'bg-emerald-100 text-emerald-700' : 
-                               ($krs->status == 'pending' ? 'bg-amber-100 text-amber-700' : 
-                               ($krs->status == 'rejected' ? 'bg-red-100 text-red-700' : 'bg-siakad-light text-siakad-secondary')) }}">
+                            {{ $krs->status == 'approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 
+                               ($krs->status == 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' : 
+                               ($krs->status == 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-siakad-light text-siakad-secondary dark:bg-gray-700 dark:text-gray-300')) }}">
                             {{ $krs->status == 'approved' ? 'Disetujui' : ($krs->status == 'pending' ? 'Menunggu' : ($krs->status == 'rejected' ? 'Ditolak' : $krs->status)) }}
                         </span>
                     </div>
@@ -85,7 +85,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full table-saas">
                         <thead>
-                            <tr class="bg-siakad-light/30">
+                            <tr class="bg-siakad-light/30 dark:bg-gray-900">
                                 <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase w-12">No</th>
                                 <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase">Mata Kuliah</th>
                                 <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase">Dosen Pengampu</th>
@@ -110,7 +110,7 @@
                             @endforeach
                         </tbody>
                         <tfoot>
-                            <tr class="bg-siakad-light/30">
+                            <tr class="bg-siakad-light/30 dark:bg-gray-900">
                                 <td colspan="3" class="py-3 px-5 text-sm font-semibold text-siakad-dark text-right">Total SKS</td>
                                 <td class="py-3 px-5 text-center">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-siakad-primary text-white text-sm font-bold">
@@ -127,19 +127,19 @@
 
     <!-- Reject Modal -->
     <div id="rejectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-md shadow-xl">
-            <div class="px-6 py-4 border-b border-siakad-light">
-                <h3 class="text-lg font-semibold text-siakad-dark">Tolak KRS</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md shadow-xl">
+            <div class="px-6 py-4 border-b border-siakad-light dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white">Tolak KRS</h3>
             </div>
             <form action="{{ route('dosen.bimbingan.krs-reject', $krs->id) }}" method="POST">
                 @csrf
                 <div class="p-6">
-                    <label class="block text-sm font-medium text-siakad-dark mb-2">Alasan Penolakan</label>
-                    <textarea name="catatan" rows="4" class="input-saas w-full resize-none" placeholder="Masukkan alasan mengapa KRS ditolak... (opsional)"></textarea>
+                    <label class="block text-sm font-medium text-siakad-dark dark:text-white mb-2">Alasan Penolakan</label>
+                    <textarea name="catatan" rows="4" class="input-saas w-full resize-none bg-white dark:bg-gray-900" placeholder="Masukkan alasan mengapa KRS ditolak... (opsional)"></textarea>
                     <p class="text-xs text-siakad-secondary mt-2">Catatan ini akan dilihat oleh mahasiswa sebagai alasan penolakan.</p>
                 </div>
-                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
-                    <button type="button" onclick="hideRejectModal()" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm">Batal</button>
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
+                    <button type="button" onclick="hideRejectModal()" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm dark:text-gray-300 dark:hover:text-white">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">Tolak KRS</button>
                 </div>
             </form>

@@ -3,66 +3,336 @@
         Rekap Presensi
     </x-slot>
 
-    <div class="mb-8">
-        <h1 class="text-xl font-semibold text-slate-800">Rekap Kehadiran</h1>
-        <p class="text-slate-500 mt-1">Ringkasan presensi untuk semua mata kuliah yang diambil</p>
-    </div>
-
-    @if($rekapList->isEmpty())
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
-        <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-        </div>
-        <h3 class="text-xl font-bold text-slate-800 mb-2">Belum Ada Data</h3>
-        <p class="text-slate-500">Anda belum memiliki mata kuliah aktif atau presensi belum tercatat.</p>
-    </div>
-    @else
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach($rekapList as $item)
-        @php
+    @php
+        // Prepare data for Alpine.js
+        $coursesData = $rekapList->map(function($item) {
             $kelas = $item['kelas'];
             $rekap = $item['rekap'];
-            $persentaseColor = $rekap['persentase'] >= 75 ? 'emerald' : ($rekap['persentase'] >= 50 ? 'amber' : 'red');
-        @endphp
-        <a href="{{ route('mahasiswa.presensi.show', $kelas) }}" class="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all">
-            <div class="p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                        {{ $kelas->nama_kelas }}
-                    </div>
-                    <div class="text-right">
-                        <span class="text-2xl font-bold text-{{ $persentaseColor }}-600">{{ $rekap['persentase'] }}%</span>
-                        <p class="text-xs text-slate-500">Kehadiran</p>
-                    </div>
+            $jadwal = $kelas->jadwal->first();
+            
+            $percentage = $rekap['persentase'];
+            $color = $percentage >= 80 ? '#10B981' : ($percentage >= 75 ? '#F59E0B' : '#EF4444');
+            $bgBar = $percentage >= 80 ? 'bg-emerald-500' : ($percentage >= 75 ? 'bg-amber-500' : 'bg-red-500');
+            
+            $today = \Carbon\Carbon::now()->locale('id')->isoFormat('dddd');
+            $isToday = $jadwal && $jadwal->hari == $today;
+
+            return [
+                'id' => $kelas->id,
+                'name' => $kelas->mataKuliah->nama_mk,
+                'code' => $kelas->mataKuliah->kode_mk,
+                'lecturer' => $kelas->dosen->user->name ?? 'Dosen Belum Diplot',
+                'sks' => $kelas->mataKuliah->sks,
+                'percentage' => $percentage,
+                'h' => $rekap['hadir'],
+                's' => $rekap['sakit'],
+                'i' => $rekap['izin'],
+                'a' => $rekap['alpa'],
+                'total_meetings' => $rekap['total_pertemuan'],
+                'done_meetings' => $rekap['hadir'] + $rekap['sakit'] + $rekap['izin'] + $rekap['alpa'],
+                'time' => $jadwal ? substr($jadwal->jam_mulai, 0, 5) . ' - ' . substr($jadwal->jam_selesai, 0, 5) : 'Jadwal belum ada',
+                'room' => $jadwal->ruangan ?? '-',
+                'day' => $jadwal->hari ?? '-',
+                'is_today' => $isToday,
+                'url' => route('mahasiswa.presensi.show', $kelas->id),
+                'color' => $color,
+                'bgBar' => $bgBar,
+            ];
+        })->values();
+    @endphp
+
+    <div x-data="{
+        search: '',
+        filter: 'all',
+        viewMode: 'card',
+        sortOrder: 'asc',
+        currentPage: 1,
+        perPage: 9,
+        courses: {{ $coursesData->toJson() }},
+        
+        get sortedCourses() {
+            let sorted = [...this.courses];
+            sorted.sort((a, b) => {
+                if (this.sortOrder === 'asc') {
+                    return a.name.localeCompare(b.name);
+                } else {
+                    return b.name.localeCompare(a.name);
+                }
+            });
+            return sorted;
+        },
+        
+        get filteredCourses() {
+            return this.sortedCourses.filter(course => {
+                const matchesSearch = course.name.toLowerCase().includes(this.search.toLowerCase()) || 
+                                     course.code.toLowerCase().includes(this.search.toLowerCase()) ||
+                                     course.lecturer.toLowerCase().includes(this.search.toLowerCase());
+                
+                let matchesFilter = true;
+                if (this.filter === 'today') {
+                    matchesFilter = course.is_today;
+                }
+                
+                return matchesSearch && matchesFilter;
+            });
+        },
+        
+        get paginatedCourses() {
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            return this.filteredCourses.slice(start, end);
+        },
+        
+        get totalPages() {
+            return Math.ceil(this.filteredCourses.length / this.perPage);
+        },
+        
+        get todayCourses() {
+            return this.courses.filter(c => c.is_today);
+        },
+        
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
+        },
+        
+        resetPage() {
+            this.currentPage = 1;
+        }
+    }" class="pb-20" x-init="$watch('search', () => resetPage()); $watch('filter', () => resetPage()); $watch('sortOrder', () => resetPage())">
+
+        <!-- Search & Filter Section (Full Width) -->
+        <div class="sticky top-0 z-30 backdrop-blur-md py-4 mb-8 transition-all duration-200">
+            <div class="card-saas p-2 flex flex-col md:flex-row gap-2">
+                <!-- Search (Full Width) -->
+                <div class="relative flex-1">
+                    <svg class="absolute left-4 top-3.5 w-5 h-5 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input 
+                        x-model="search"
+                        type="text" 
+                        placeholder="Cari mata kuliah, kode, atau dosen..." 
+                        class="w-full pl-12 pr-4 py-3 bg-transparent border-none text-siakad-dark placeholder-siakad-secondary focus:ring-0 focus:outline-none text-sm font-medium"
+                    >
                 </div>
                 
-                <h3 class="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition">{{ $kelas->mataKuliah->nama_mk }}</h3>
-                <p class="text-sm text-slate-500 mb-4">{{ $kelas->mataKuliah->kode_mk }} • {{ $kelas->mataKuliah->sks }} SKS</p>
-                
-                <div class="flex gap-2 text-xs">
-                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">H: {{ $rekap['hadir'] }}</span>
-                    <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full">S: {{ $rekap['sakit'] }}</span>
-                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full">I: {{ $rekap['izin'] }}</span>
-                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full">A: {{ $rekap['alpa'] }}</span>
+                <!-- Filters, Sort & View Toggle -->
+                <div class="flex items-center gap-2 p-1 bg-siakad-light dark:bg-slate-700 rounded-xl flex-shrink-0">
+                    <button @click="filter = 'all'" 
+                        :class="filter === 'all' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
+                        Semua
+                    </button>
+                    <button @click="filter = 'today'" 
+                        :class="filter === 'today' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
+                        Hari Ini
+                    </button>
+                    
+                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                    
+                    <!-- Sort Toggle -->
+                    <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" 
+                        class="p-2 rounded-lg transition-colors text-slate-500 hover:text-[#234C6A] hover:bg-white" 
+                        :title="sortOrder === 'asc' ? 'A-Z' : 'Z-A'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="sortOrder === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+                            <path x-show="sortOrder === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                    
+                    <button @click="viewMode = 'card'" class="p-2 rounded-lg transition-colors" :class="viewMode === 'card' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    </button>
+                    <button @click="viewMode = 'list'" class="p-2 rounded-lg transition-colors" :class="viewMode === 'list' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
                 </div>
-                
-                <!-- Progress Bar -->
-                <div class="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-{{ $persentaseColor }}-500 rounded-full transition-all" style="width: {{ $rekap['persentase'] }}%"></div>
-                </div>
-                <p class="text-xs text-slate-400 mt-2">{{ $rekap['hadir'] }} dari {{ $rekap['total_pertemuan'] }} pertemuan</p>
+            </div>
+        </div>
+
+        <!-- Quick Access (Today's Classes) - No Gradient -->
+        <div x-show="filter === 'all' && todayCourses.length > 0" class="mb-10" style="display: none;">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-1 h-6 bg-[#234C6A] rounded-full"></div>
+                <h2 class="text-lg font-bold text-siakad-dark">Mata Kuliah Hari Ini</h2>
             </div>
             
-            @if($rekap['persentase'] < 75 && $rekap['total_pertemuan'] > 0)
-            <div class="px-6 py-3 bg-red-50 border-t border-red-100">
-                <p class="text-xs text-red-600 flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    Kehadiran di bawah 75%
-                </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <template x-for="course in todayCourses" :key="'today-'+course.id">
+                    <div class="bg-[#1B3C53] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
+                        <div class="relative z-10 flex flex-col h-full justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white/90" x-text="course.code"></span>
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 text-[10px] font-bold border border-emerald-400/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        Aktif
+                                    </span>
+                                </div>
+                                <h3 class="font-bold text-base leading-tight mb-1" x-text="course.name"></h3>
+                                <p class="text-white/60 text-xs flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span x-text="course.time"></span> • <span x-text="course.room"></span>
+                                </p>
+                            </div>
+                            
+                            <a :href="course.url" class="mt-4 w-full py-2 bg-white text-[#1B3C53] text-center text-xs font-bold rounded-lg hover:bg-slate-100 transition shadow-sm">
+                                Buka Presensi
+                            </a>
+                        </div>
+                    </div>
+                </template>
             </div>
-            @endif
-        </a>
-        @endforeach
+        </div>
+
+        <!-- Main Content -->
+        <div>
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-1 h-6 bg-siakad-secondary rounded-full"></div>
+                <h2 class="text-lg font-bold text-siakad-dark">Semua Mata Kuliah</h2>
+                <span class="text-xs font-semibold px-2 py-1 bg-siakad-light dark:bg-slate-700 text-siakad-secondary rounded-full" x-text="filteredCourses.length"></span>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="filteredCourses.length === 0" class="text-center py-20 card-saas" style="display: none;">
+                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">Tidak ada mata kuliah ditemukan</h3>
+                <p class="text-slate-400 mt-1 max-w-xs mx-auto">Coba ubah kata kunci pencarian atau filter yang Anda gunakan.</p>
+                <button @click="search = ''; filter = 'all'" class="mt-6 text-[#234C6A] font-semibold text-sm hover:underline">
+                    Reset Filter
+                </button>
+            </div>
+
+            <!-- GRID View -->
+            <div x-show="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <template x-for="course in paginatedCourses" :key="course.id">
+                    <div class="card-saas p-6 hover:shadow-lg transition-all duration-300 group relative">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="inline-block px-2.5 py-1 rounded-md bg-siakad-light dark:bg-slate-700 text-siakad-secondary text-[10px] font-bold tracking-wide uppercase" x-text="course.code"></span>
+                                <h3 class="font-bold text-siakad-dark text-base mt-2 group-hover:text-[#234C6A] transition-colors line-clamp-1" x-text="course.name"></h3>
+                                <p class="text-siakad-secondary text-xs mt-0.5 line-clamp-1" x-text="course.lecturer"></p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-2xl font-extrabold" :style="'color: ' + course.color" x-text="course.percentage + '%'"></span>
+                                <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wide mt-[-2px]">Kehadiran</p>
+                            </div>
+                        </div>
+
+                        <div class="w-full h-1.5 bg-siakad-light dark:bg-slate-700 rounded-full mb-5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-1000" 
+                                 :class="course.bgBar"
+                                 :style="'width: ' + course.percentage + '%'"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-siakad-light dark:border-slate-700">
+                            <div class="text-xs text-slate-400 font-medium">
+                                <span x-text="course.done_meetings"></span> dari <span x-text="course.total_meetings"></span> pertemuan
+                            </div>
+                            <a :href="course.url" class="flex items-center gap-1 text-xs font-bold text-[#234C6A] hover:text-[#1B3C53] transition-colors group/link">
+                                Detail Presensi
+                                <svg class="w-3.5 h-3.5 transform group-hover/link:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- LIST View -->
+            <div x-show="viewMode === 'list'" class="card-saas overflow-hidden" style="display: none;">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#234C6A] text-white text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">Mata Kuliah</th>
+                                <th class="p-4 font-semibold w-32">Dosen</th>
+                                <th class="p-4 font-semibold text-center w-24">SKS</th>
+                                <th class="p-4 font-semibold text-center w-32">Kehadiran</th>
+                                <th class="p-4 font-semibold w-40">Detail</th>
+                                <th class="p-4 font-semibold text-right w-24">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-for="course in paginatedCourses" :key="'list-'+course.id">
+                                <tr class="hover:bg-slate-50 transition-colors group">
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-[#234C6A] font-bold text-xs" x-text="course.code.substring(0,3)"></div>
+                                            <div>
+                                                <div class="font-bold text-slate-800 text-sm" x-text="course.name"></div>
+                                                <div class="text-xs text-slate-500" x-text="course.code"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="text-sm font-medium text-slate-600 line-clamp-1" x-text="course.lecturer"></div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold" x-text="course.sks"></span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <span class="font-bold text-sm" :style="'color: ' + course.color" x-text="course.percentage + '%'"></span>
+                                            <div class="w-16 h-1 bg-slate-100 rounded-full mt-1">
+                                                <div class="h-full rounded-full" :class="course.bgBar" :style="'width: ' + course.percentage + '%'"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex gap-1 text-[10px] font-bold text-slate-500">
+                                            <span class="bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded" x-text="'H:'+course.h"></span>
+                                            <span class="bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded" x-text="'S:'+course.s"></span>
+                                            <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded" x-text="'I:'+course.i"></span>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-right">
+                                        <a :href="course.url" class="p-2 text-slate-400 hover:text-[#234C6A] hover:bg-slate-100 rounded-lg transition-all inline-block">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div x-show="totalPages > 1" class="mt-8 flex items-center justify-center gap-2" style="display: none;">
+                <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1"
+                    class="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    :class="currentPage === 1 ? 'bg-siakad-light dark:bg-slate-700 text-siakad-secondary' : 'card-saas text-siakad-secondary hover:text-siakad-dark'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                
+                <template x-for="page in totalPages" :key="page">
+                    <button @click="goToPage(page)"
+                        class="w-10 h-10 rounded-lg text-sm font-semibold transition-colors"
+                        :class="currentPage === page ? 'bg-[#234C6A] text-white shadow-md' : 'card-saas text-siakad-secondary hover:text-siakad-dark'"
+                        x-text="page">
+                    </button>
+                </template>
+                
+                <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages"
+                    class="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    :class="currentPage === totalPages ? 'bg-siakad-light dark:bg-slate-700 text-siakad-secondary' : 'card-saas text-siakad-secondary hover:text-siakad-dark'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Page Info -->
+            <div x-show="totalPages > 1" class="mt-3 text-center text-xs text-siakad-secondary" style="display: none;">
+                Menampilkan <span x-text="((currentPage - 1) * perPage) + 1"></span> - <span x-text="Math.min(currentPage * perPage, filteredCourses.length)"></span> dari <span x-text="filteredCourses.length"></span> mata kuliah
+            </div>
+        </div>
     </div>
-    @endif
+    
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </x-app-layout>

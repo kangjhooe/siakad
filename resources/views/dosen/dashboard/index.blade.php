@@ -69,7 +69,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Jadwal Hari Ini -->
@@ -114,8 +114,55 @@
                 </div>
                 @endif
             </div>
+        </div>
 
-            <!-- Progress Nilai -->
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Pending KRS -->
+            @if($pendingKrs > 0)
+            <div class="card-saas p-6 border-l-4 border-l-amber-500">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-siakad-dark">KRS Menunggu</p>
+                        <p class="text-sm text-siakad-secondary">{{ $pendingKrs }} mahasiswa</p>
+                    </div>
+                </div>
+                <a href="{{ route('dosen.bimbingan.krs-approval') }}" class="block w-full text-center px-4 py-2 bg-siakad-primary text-white rounded-lg text-sm font-medium hover:bg-siakad-primary/90 transition">
+                    Review Sekarang
+                </a>
+            </div>
+            @endif
+
+            <!-- Kelas List -->
+            <div class="card-saas overflow-hidden">
+                <div class="px-6 py-4 border-b border-siakad-light">
+                    <h3 class="font-semibold text-siakad-dark">Kelas Diampu</h3>
+                </div>
+                @if($kelasList->isEmpty())
+                <div class="p-6 text-center text-siakad-secondary text-sm">
+                    Belum ada kelas
+                </div>
+                @else
+                <div class="divide-y divide-siakad-light max-h-64 overflow-y-auto">
+                    @foreach($kelasList as $kelas)
+                    <a href="{{ route('dosen.presensi.kelas', $kelas) }}" class="block p-4 hover:bg-siakad-light/30 transition">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-siakad-dark">{{ $kelas->mataKuliah->nama_mk }}</p>
+                                <p class="text-xs text-siakad-secondary">{{ $kelas->mataKuliah->kode_mk }} • Kelas {{ $kelas->nama_kelas }}</p>
+                            </div>
+                            <span class="text-xs bg-siakad-light text-siakad-secondary px-2 py-1 rounded-full">{{ $kelas->krsDetail->count() }} mhs</span>
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+                @endif
+            </div>
+
+            <!-- Progress Nilai (below Kelas Diampu) -->
             <div class="card-saas overflow-hidden">
                 <div class="px-6 py-4 border-b border-siakad-light flex items-center justify-between">
                     <h3 class="font-semibold text-siakad-dark">Progress Input Nilai</h3>
@@ -154,71 +201,24 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
-            <!-- Pending KRS -->
-            @if($pendingKrs > 0)
-            <div class="card-saas p-6 border-l-4 border-l-amber-500">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-siakad-dark">KRS Menunggu</p>
-                        <p class="text-sm text-siakad-secondary">{{ $pendingKrs }} mahasiswa</p>
-                    </div>
-                </div>
-                <a href="{{ route('dosen.bimbingan.krs-approval') }}" class="block w-full text-center px-4 py-2 bg-siakad-primary text-white rounded-lg text-sm font-medium hover:bg-siakad-primary/90 transition">
-                    Review Sekarang
-                </a>
-            </div>
-            @endif
-
-            <!-- Kelas List -->
-            <div class="card-saas overflow-hidden">
-                <div class="px-6 py-4 border-b border-siakad-light">
-                    <h3 class="font-semibold text-siakad-dark">Kelas Diampu</h3>
-                </div>
-                @if($kelasList->isEmpty())
-                <div class="p-6 text-center text-siakad-secondary text-sm">
-                    Belum ada kelas
-                </div>
-                @else
-                <div class="divide-y divide-siakad-light max-h-80 overflow-y-auto">
-                    @foreach($kelasList as $kelas)
-                    <a href="{{ route('dosen.presensi.kelas', $kelas) }}" class="block p-4 hover:bg-siakad-light/30 transition">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="font-medium text-siakad-dark">{{ $kelas->mataKuliah->nama_mk }}</p>
-                                <p class="text-xs text-siakad-secondary">{{ $kelas->mataKuliah->kode_mk }} • Kelas {{ $kelas->nama_kelas }}</p>
-                            </div>
-                            <span class="text-xs bg-siakad-light text-siakad-secondary px-2 py-1 rounded-full">{{ $kelas->krsDetail->count() }} mhs</span>
-                        </div>
-                    </a>
-                    @endforeach
-                </div>
-                @endif
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="bg-siakad-dark rounded-xl p-6 text-white">
-                <h3 class="font-semibold mb-4">Aksi Cepat</h3>
-                <div class="space-y-3">
-                    <a href="{{ route('dosen.penilaian.index') }}" class="flex items-center gap-3 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <span class="text-sm">Input Nilai</span>
-                    </a>
-                    <a href="{{ route('dosen.presensi.index') }}" class="flex items-center gap-3 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                        <span class="text-sm">Kelola Presensi</span>
-                    </a>
-                    <a href="{{ route('dosen.bimbingan.index') }}" class="flex items-center gap-3 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <span class="text-sm">Mahasiswa Bimbingan</span>
-                    </a>
-                </div>
-            </div>
+    <!-- Quick Actions (Full Width Horizontal) -->
+    <div class="bg-siakad-dark rounded-xl p-6 text-white">
+        <h3 class="font-semibold mb-4">Aksi Cepat</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{{ route('dosen.penilaian.index') }}" class="flex items-center gap-3 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span class="text-sm">Input Nilai</span>
+            </a>
+            <a href="{{ route('dosen.presensi.index') }}" class="flex items-center gap-3 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                <span class="text-sm">Kelola Presensi</span>
+            </a>
+            <a href="{{ route('dosen.bimbingan.index') }}" class="flex items-center gap-3 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="text-sm">Mahasiswa Bimbingan</span>
+            </a>
         </div>
     </div>
 </x-app-layout>

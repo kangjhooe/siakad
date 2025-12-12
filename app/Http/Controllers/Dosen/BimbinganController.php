@@ -37,7 +37,26 @@ class BimbinganController extends Controller
             $query->where('angkatan', $request->angkatan);
         }
 
-        $mahasiswaBimbingan = $query->orderBy('angkatan', 'desc')->paginate(10);
+        // Sorting
+        $sortBy = $request->get('sort', 'angkatan');
+        $sortDir = $request->get('dir', 'desc');
+        
+        // Validate sort direction
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+        
+        // Apply sorting
+        if ($sortBy === 'nama') {
+            // Sort by user name using join
+            $query->join('users', 'mahasiswa.user_id', '=', 'users.id')
+                  ->orderBy('users.name', $sortDir)
+                  ->select('mahasiswa.*');
+        } elseif (in_array($sortBy, ['nim', 'angkatan', 'status'])) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->orderBy('angkatan', 'desc');
+        }
+
+        $mahasiswaBimbingan = $query->paginate(10)->withQueryString();
 
         // Get available angkatan for filter
         $angkatanList = $dosen->mahasiswaBimbingan()->distinct()->pluck('angkatan')->sort()->reverse();
@@ -65,17 +84,50 @@ class BimbinganController extends Controller
         // Get KRS from mahasiswa bimbingan
         $mahasiswaIds = $dosen->mahasiswaBimbingan()->pluck('id');
 
-        $krsList = Krs::with(['mahasiswa.user', 'mahasiswa.prodi', 'tahunAkademik', 'krsDetail.kelas.mataKuliah'])
-            ->whereIn('mahasiswa_id', $mahasiswaIds)
-            ->when($status !== 'all', fn($q) => $q->where('status', $status))
-            ->orderBy('updated_at', 'desc')
-            ->paginate(config('siakad.pagination', 15));
+        $query = Krs::with(['mahasiswa.user', 'mahasiswa.prodi', 'tahunAkademik', 'krsDetail.kelas.mataKuliah'])
+            ->whereIn('krs.mahasiswa_id', $mahasiswaIds)
+            ->when($status !== 'all', fn($q) => $q->where('krs.status', $status));
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('mahasiswa', function ($q) use ($search) {
+                $q->where('nim', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort', 'updated_at');
+        $sortDir = $request->get('dir', 'desc');
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+
+        if ($sortBy === 'nama') {
+            $query->join('mahasiswa', 'krs.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->join('users', 'mahasiswa.user_id', '=', 'users.id')
+                  ->orderBy('users.name', $sortDir)
+                  ->select('krs.*');
+        } elseif ($sortBy === 'nim') {
+            $query->join('mahasiswa', 'krs.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->orderBy('mahasiswa.nim', $sortDir)
+                  ->select('krs.*');
+        } elseif ($sortBy === 'status') {
+            $query->orderBy('krs.status', $sortDir);
+        } else {
+            $query->orderBy('krs.updated_at', 'desc');
+        }
+
+        $krsList = $query->paginate(config('siakad.pagination', 15))->withQueryString();
 
         $statusCounts = [
             'pending' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'pending')->count(),
             'approved' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'approved')->count(),
             'rejected' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'rejected')->count(),
         ];
+
+        if ($request->ajax()) {
+            return view('dosen.bimbingan._krs-table', compact('krsList'))->render();
+        }
 
         return view('dosen.bimbingan.krs-approval', compact('krsList', 'status', 'statusCounts'));
     }

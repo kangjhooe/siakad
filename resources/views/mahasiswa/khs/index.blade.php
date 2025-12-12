@@ -9,15 +9,15 @@
     </div>
 
     <!-- IPK Summary Card -->
-    <div class="card-saas p-6 bg-gradient-to-r from-siakad-primary to-emerald-600 text-white mb-8 border-none">
+    <div class="rounded-2xl p-6 bg-[#1B3C53] text-white mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm opacity-80">Indeks Prestasi Kumulatif (IPK)</p>
-                <p class="text-4xl font-bold mt-2">{{ number_format($ipkData['ips'], 2) }}</p>
-                <p class="text-sm opacity-60 mt-1">Total {{ $ipkData['total_sks'] }} SKS dari {{ $semesterList->count() }} semester</p>
+                <p class="text-sm text-white/70">Indeks Prestasi Kumulatif (IPK)</p>
+                <p class="text-4xl font-bold mt-2 text-white">{{ number_format($ipkData['ips'], 2) }}</p>
+                <p class="text-sm text-white/50 mt-1">Total {{ $ipkData['total_sks'] }} SKS dari {{ $semesterList->count() }} semester</p>
             </div>
-            <div class="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
-                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <div class="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             </div>
         </div>
     </div>
@@ -39,7 +39,8 @@
         @foreach($semesterList as $item)
         @php
             $ta = $item['tahun_akademik'];
-            $ipsColor = $item['ips'] >= 3.5 ? 'emerald' : ($item['ips'] >= 3.0 ? 'blue' : ($item['ips'] >= 2.5 ? 'amber' : 'red'));
+            // Use system palette colors instead of Tailwind defaults
+            $ipsColor = $item['ips'] >= 3.5 ? '#234C6A' : ($item['ips'] >= 3.0 ? '#456882' : ($item['ips'] >= 2.5 ? '#F59E0B' : '#EF4444'));
         @endphp
         <a href="{{ route('mahasiswa.khs.show', $ta) }}" class="card-saas group overflow-hidden hover:ring-2 hover:ring-siakad-primary transition-all">
             <div class="p-6">
@@ -49,7 +50,7 @@
                         <p class="text-sm text-siakad-secondary">Semester {{ $ta->semester }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-2xl font-bold text-{{ $ipsColor }}-600">{{ number_format($item['ips'], 2) }}</p>
+                        <p class="text-2xl font-bold" style="color: {{ $ipsColor }}">{{ number_format($item['ips'], 2) }}</p>
                         <p class="text-xs text-siakad-secondary">IPS</p>
                     </div>
                 </div>
@@ -65,9 +66,9 @@
                     </span>
                 </div>
                 
-                <!-- Progress Bar -->
+                <!-- Progress Bar - Using system palette -->
                 <div class="mt-4 h-2 bg-siakad-light rounded-full overflow-hidden">
-                    <div class="h-full bg-{{ $ipsColor }}-500 rounded-full transition-all" style="width: {{ min($item['ips'] / 4 * 100, 100) }}%"></div>
+                    <div class="h-full rounded-full transition-all" style="width: {{ min($item['ips'] / 4 * 100, 100) }}%; background-color: {{ $ipsColor }}"></div>
                 </div>
             </div>
             

@@ -36,12 +36,12 @@
             }
             
             .dark {
-                --bg-body: #0F172A;
-                --bg-card: #1E293B;
-                --bg-sidebar: #1E293B;
-                --text-primary: #F1F5F9;
-                --text-secondary: #94A3B8;
-                --border-color: #334155;
+                --bg-body: #111827;
+                --bg-card: #1F2937;
+                --bg-sidebar: #1F2937;
+                --text-primary: #FFFFFF;
+                --text-secondary: #9CA3AF;
+                --border-color: #374151;
             }
             
             body { 
@@ -87,12 +87,15 @@
                 color: var(--text-primary) !important;
             }
             .dark .text-siakad-secondary {
-                color: var(--text-secondary) !important;
+                color: #D1D5DB !important;
             }
             .dark .text-siakad-primary {
                 color: #60A5FA !important;
             }
             .dark .border-siakad-light {
+                border-color: var(--border-color) !important;
+            }
+            .dark .divide-siakad-light > :not([hidden]) ~ :not([hidden]) {
                 border-color: var(--border-color) !important;
             }
             .dark .bg-siakad-light {
@@ -135,6 +138,13 @@
                 border: 1px solid var(--siakad-light);
                 border-radius: 8px;
                 transition: all 0.15s ease;
+                background-color: var(--bg-card);
+                color: var(--text-primary);
+            }
+            .dark .input-saas {
+                background-color: var(--bg-sidebar); /* matches card/sidebar bg */
+                border-color: var(--border-color);
+                color: var(--text-primary);
             }
             .input-saas:focus {
                 border-color: var(--siakad-primary);
@@ -233,7 +243,7 @@
           x-init="setTimeout(() => document.body.classList.remove('no-transition'), 100)">
         <div class="min-h-screen flex">
             <!-- Sidebar -->
-            <aside class="w-64 fixed h-full z-30 transition-all duration-300" :class="{ 'w-64': sidebarOpen, 'w-20': !sidebarOpen }" style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
+            <aside class="w-64 fixed h-full z-30 transition-all duration-300 hidden md:block" :class="{ 'w-64': sidebarOpen, 'w-20': !sidebarOpen }" style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
                 <!-- Logo -->
                 <div class="h-16 flex items-center justify-between px-4 logo-section" style="border-bottom: 1px solid var(--border-color);">
 
@@ -368,7 +378,7 @@
                     <div class="pt-4 pb-1">
                         <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">Data</p>
                     </div>
-                    <a href="{{ route('mahasiswa.biodata.index') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium">
+                    <a href="{{ route('mahasiswa.biodata.index') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/biodata*') ? 'active' : '' }}">
                         <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         <span class="sidebar-text">Biodata</span>
                     </a>
@@ -446,7 +456,7 @@
             </aside>
 
             <!-- Main Content -->
-            <div class="flex-1 ml-64 transition-all duration-300" :class="{ 'ml-64': sidebarOpen, 'ml-20': !sidebarOpen }">
+            <div class="flex-1 ml-0 md:ml-64 transition-all duration-300 min-w-0" :class="{ 'ml-0 md:ml-64': sidebarOpen, 'ml-0 md:ml-20': !sidebarOpen }">
                 <!-- Top Header -->
                 <header class="h-16 flex items-center justify-between px-8 sticky top-0 z-20" style="background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
                     <div>
@@ -455,7 +465,7 @@
                         @endisset
                     </div>
                     <div class="flex items-center gap-4">
-                        @if(Auth::user()->role === 'mahasiswa')
+                        @if(in_array(auth()->user()->role, ['mahasiswa', 'dosen', 'admin']))
                         <!-- Dark Mode Toggle -->
                         <button id="darkModeToggle" onclick="toggleDarkMode()" class="p-2 rounded-lg transition-colors hover:bg-siakad-light/50" style="color: var(--text-secondary);" title="Toggle Dark Mode">
                             <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -481,7 +491,7 @@
                             </button>
                             
                             <!-- Notification Dropdown -->
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-transition class="absolute right-0 mt-2 w-80 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+                            <div x-cloak x-show="notifOpen" @click.away="notifOpen = false" x-transition class="absolute right-0 mt-2 w-80 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
                                 <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid var(--border-color);">
                                     <h3 class="font-semibold" style="color: var(--text-primary);">Notifikasi</h3>
                                     @if($unreadCount > 0)
@@ -516,7 +526,7 @@
                             </div>
                         </div>
                         
-                        <div class="text-right">
+                        <div class="text-right hidden md:block">
                             <p class="text-sm font-medium" style="color: var(--text-primary);">{{ Auth::user()->name }}</p>
                             <p class="text-[11px]" style="color: var(--text-secondary);">{{ now()->format('l, d M Y') }}</p>
                         </div>
@@ -524,7 +534,7 @@
                 </header>
 
                 <!-- Page Content -->
-                <main class="p-8">
+                <main class="p-4 md:p-8 pb-24 md:pb-8">
                     <!-- Flash Messages -->
                     @if(session('success'))
                     <div class="mb-6 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm font-medium animate-fade-in">
@@ -539,16 +549,99 @@
 
                     {{ $slot }}
                 </main>
-
-                <!-- Footer -->
-                <footer class="px-8 py-4" style="border-top: 1px solid var(--border-color); background-color: var(--bg-card);">
-                    <div class="flex items-center justify-between text-[11px]" style="color: var(--text-secondary);">
-                        <p>© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
-                        <p>v1.0.0</p>
-                    </div>
-                </footer>
             </div>
         </div>
+
+        @if(Auth::user()->role === 'mahasiswa')
+        <!-- Bottom Navigation (Mobile Only) -->
+        <nav class="fixed bottom-0 z-50 w-full bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 md:hidden flex justify-around items-center h-16 pb-safe safe-area-bottom">
+            <a href="{{ url('mahasiswa/dashboard') }}" class="flex flex-col items-center justify-center w-full h-full text-[10px] font-medium {{ request()->is('mahasiswa/dashboard') ? 'text-siakad-primary dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span>Beranda</span>
+            </a>
+            
+            <a href="{{ url('mahasiswa/jadwal') }}" class="flex flex-col items-center justify-center w-full h-full text-[10px] font-medium {{ request()->is('mahasiswa/jadwal*') ? 'text-siakad-primary dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Jadwal</span>
+            </a>
+
+            <a href="{{ url('mahasiswa/presensi') }}" class="flex flex-col items-center justify-center w-full h-full text-[10px] font-medium {{ request()->is('mahasiswa/presensi*') ? 'text-siakad-primary dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">
+                <div class="w-12 h-12 bg-siakad-primary rounded-full flex items-center justify-center -mt-6 border-4 border-white dark:border-gray-900 shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zM6 16H4v4h2v-4zM6 9H4v5h2V9zm6 0h-2v5h2V9zm6 0h-2v5h2V9z"></path></svg>
+                </div>
+                <span class="mt-1">Presensi</span>
+            </a>
+
+        <a href="{{ url('mahasiswa/khs') }}" class="flex flex-col items-center justify-center w-full h-full text-[10px] font-medium {{ request()->is('mahasiswa/khs*') ? 'text-siakad-primary dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span>Nilai</span>
+            </a>
+
+            <button type="button" @click="$dispatch('open-mobile-menu')" class="flex flex-col items-center justify-center w-full h-full text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                <span>Menu</span>
+            </button>
+        </nav>
+
+        <!-- Mobile Menu Drawer -->
+        <div x-data="{ open: false }" @open-mobile-menu.window="open = true" @keydown.escape.window="open = false" x-show="open" class="relative z-50 md:hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true" style="display: none;">
+            <div x-show="open" x-transition:enter="ease-in-out duration-500" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in-out duration-500" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="open = false"></div>
+
+            <div class="fixed inset-x-0 bottom-0 overflow-hidden">
+                <div class="pointer-events-none fixed inset-x-0 bottom-0 flex max-h-full">
+                    <div x-show="open" x-transition:enter="transform transition ease-in-out duration-500 sm:duration-700" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0" x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full" class="pointer-events-auto w-screen max-w-md">
+                        <div class="flex h-full flex-col overflow-y-scroll bg-white dark:bg-gray-800 shadow-xl pb-20 rounded-t-2xl">
+                            <div class="px-4 py-6 sm:px-6">
+                                <div class="flex item-center justify-between">
+                                    <h2 class="text-lg font-medium text-gray-900 dark:text-white" id="slide-over-title">Menu Lainnya</h2>
+                                    <button type="button" class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 focus:outline-none" @click="open = false">
+                                        <span class="sr-only">Close panel</span>
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="relative flex-1 px-4 sm:px-6">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <a href="{{ url('mahasiswa/krs') }}" class="flex flex-col items-center justify-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                        </div>
+                                        <span class="text-xs text-center font-medium text-gray-700 dark:text-gray-300">Pengisian KRS</span>
+                                    </a>
+                                    
+                                    <a href="{{ url('mahasiswa/transkrip') }}" class="flex flex-col items-center justify-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                        </div>
+                                        <span class="text-xs text-center font-medium text-gray-700 dark:text-gray-300">Riwayat Kuliah</span>
+                                    </a>
+
+                                    <a href="{{ route('mahasiswa.biodata.index') }}" class="flex flex-col items-center justify-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                        </div>
+                                        <span class="text-xs text-center font-medium text-gray-700 dark:text-gray-300">Biodata</span>
+                                    </a>
+
+                                    <form method="POST" action="{{ route('logout') }}" class="block w-full">
+                                        @csrf
+                                        <button type="submit" class="flex flex-col items-center justify-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition w-full h-full">
+                                            <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-2">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                            </div>
+                                            <span class="text-xs text-center font-medium text-red-600 dark:text-red-400">Logout</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         @stack('scripts')
     </body>

@@ -5,7 +5,7 @@
 
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <p class="text-sm text-siakad-secondary">Kelola data kelas dan jadwal kuliah dalam sistem</p>
+            <p class="text-sm text-siakad-secondary dark:text-gray-400">Kelola data kelas dan jadwal kuliah dalam sistem</p>
         </div>
         <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-primary-saas px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -14,18 +14,18 @@
     </div>
 
     <!-- Table Card -->
-    <div class="card-saas overflow-hidden">
+    <div class="card-saas overflow-hidden dark:bg-gray-800">
         <div class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
-                    <tr class="bg-siakad-light/30">
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-16">#</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Kelas</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Mata Kuliah</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Dosen</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Jadwal</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Kapasitas</th>
-                        <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-32">Aksi</th>
+                    <tr class="bg-siakad-light/30 dark:bg-gray-900">
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-16">#</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Kelas</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Mata Kuliah</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Dosen</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Jadwal</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Kapasitas</th>
+                        <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-32">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,35 +33,35 @@
                     @php
                         $jadwal = $k->jadwal->first();
                     @endphp
-                    <tr class="border-b border-siakad-light/50">
-                        <td class="py-4 px-5 text-sm text-siakad-secondary">{{ $index + 1 }}</td>
+                    <tr class="border-b border-siakad-light/50 dark:border-gray-700/50">
+                        <td class="py-4 px-5 text-sm text-siakad-secondary dark:text-gray-400">{{ $index + 1 }}</td>
                         <td class="py-4 px-5">
-                            <span class="inline-flex px-3 py-1.5 text-sm font-semibold bg-siakad-primary text-white rounded-lg">{{ $k->nama_kelas }}</span>
+                            <span class="inline-flex px-3 py-1.5 text-sm font-semibold bg-siakad-primary text-white dark:bg-blue-600 rounded-lg">{{ $k->nama_kelas }}</span>
                         </td>
                         <td class="py-4 px-5">
                             <div>
-                                <span class="text-sm font-medium text-siakad-dark">{{ $k->mataKuliah->nama_mk ?? '-' }}</span>
-                                <span class="block text-xs text-siakad-secondary font-mono">{{ $k->mataKuliah->kode_mk ?? '' }}</span>
+                                <span class="text-sm font-medium text-siakad-dark dark:text-white">{{ $k->mataKuliah->nama_mk ?? '-' }}</span>
+                                <span class="block text-xs text-siakad-secondary dark:text-gray-400 font-mono">{{ $k->mataKuliah->kode_mk ?? '' }}</span>
                             </div>
                         </td>
                         <td class="py-4 px-5">
-                            <span class="text-sm text-siakad-secondary">{{ $k->dosen->user->name ?? '-' }}</span>
+                            <span class="text-sm text-siakad-secondary dark:text-gray-400">{{ $k->dosen->user->name ?? '-' }}</span>
                         </td>
                         <td class="py-4 px-5">
                             @if($jadwal)
                             <div class="text-sm">
-                                <span class="font-medium text-siakad-dark">{{ $jadwal->hari }}</span>
-                                <span class="block text-xs text-siakad-secondary">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}</span>
+                                <span class="font-medium text-siakad-dark dark:text-white">{{ $jadwal->hari }}</span>
+                                <span class="block text-xs text-siakad-secondary dark:text-gray-400">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}</span>
                                 @if($jadwal->ruangan)
-                                <span class="block text-xs text-siakad-primary">{{ $jadwal->ruangan }}</span>
+                                <span class="block text-xs text-siakad-primary dark:text-blue-400">{{ $jadwal->ruangan }}</span>
                                 @endif
                             </div>
                             @else
-                            <span class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">Belum diatur</span>
+                            <span class="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/50 dark:text-amber-400 px-2 py-1 rounded">Belum diatur</span>
                             @endif
                         </td>
                         <td class="py-4 px-5">
-                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary rounded-full">{{ $k->kapasitas }} mhs</span>
+                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary dark:bg-gray-700 dark:text-gray-300 rounded-full">{{ $k->kapasitas }} mhs</span>
                         </td>
                         <td class="py-4 px-5 text-right">
                             <div class="flex items-center justify-end gap-2">
@@ -92,9 +92,9 @@
                         <td colspan="7" class="py-12 text-center">
                             <div class="flex flex-col items-center">
                                 <div class="w-12 h-12 bg-siakad-light/50 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                                    <svg class="w-6 h-6 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
                                 </div>
-                                <p class="text-siakad-secondary text-sm">Belum ada data kelas</p>
+                                <p class="text-siakad-secondary dark:text-gray-400 text-sm">Belum ada data kelas</p>
                             </div>
                         </td>
                     </tr>
@@ -106,26 +106,26 @@
 
     <!-- Create Modal -->
     <div id="createModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-siakad-light">
-                <h3 class="text-lg font-semibold text-siakad-dark">Tambah Kelas</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-siakad-light dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white">Tambah Kelas</h3>
             </div>
             <form action="{{ route('admin.kelas.store') }}" method="POST">
                 @csrf
                 <div class="p-6 space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Kelas</label>
-                            <input type="text" name="nama_kelas" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="Contoh: A" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Kelas</label>
+                            <input type="text" name="nama_kelas" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Contoh: A" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Kapasitas</label>
-                            <input type="number" name="kapasitas" min="1" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="40" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kapasitas</label>
+                            <input type="number" name="kapasitas" min="1" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="40" required>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Mata Kuliah</label>
-                        <select name="mata_kuliah_id" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Mata Kuliah</label>
+                        <select name="mata_kuliah_id" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                             <option value="">Pilih Mata Kuliah</option>
                             @foreach($mataKuliah as $mk)
                             <option value="{{ $mk->id }}">{{ $mk->kode_mk }} - {{ $mk->nama_mk }}</option>
@@ -133,8 +133,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Dosen Pengampu</label>
-                        <select name="dosen_id" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Dosen Pengampu</label>
+                        <select name="dosen_id" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                             <option value="">Pilih Dosen</option>
                             @foreach($dosen as $d)
                             <option value="{{ $d->id }}">{{ $d->user->name }}</option>
@@ -143,15 +143,15 @@
                     </div>
                     
                     <!-- Jadwal Section -->
-                    <div class="pt-4 border-t border-siakad-light">
-                        <h4 class="text-sm font-semibold text-siakad-dark mb-3 flex items-center gap-2">
+                    <div class="pt-4 border-t border-siakad-light dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-siakad-dark dark:text-white mb-3 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Jadwal Kuliah (Opsional)
                         </h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Hari</label>
-                                <select name="hari" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Hari</label>
+                                <select name="hari" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                                     <option value="">Pilih Hari</option>
                                     <option value="Senin">Senin</option>
                                     <option value="Selasa">Selasa</option>
@@ -162,24 +162,24 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Ruangan</label>
-                                <input type="text" name="ruangan" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="Contoh: LT-101">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Ruangan</label>
+                                <input type="text" name="ruangan" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Contoh: LT-101">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Jam Mulai</label>
-                                <input type="time" name="jam_mulai" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Jam Mulai</label>
+                                <input type="time" name="jam_mulai" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Jam Selesai</label>
-                                <input type="time" name="jam_selesai" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Jam Selesai</label>
+                                <input type="time" name="jam_selesai" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
-                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
                     <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
                 </div>
             </form>
@@ -188,34 +188,34 @@
 
     <!-- Edit Modal -->
     <div id="editModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-siakad-light">
-                <h3 class="text-lg font-semibold text-siakad-dark">Edit Kelas</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-siakad-light dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white">Edit Kelas</h3>
             </div>
             <form id="editForm" method="POST">
                 @csrf @method('PUT')
                 <div class="p-6 space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Kelas</label>
-                            <input type="text" name="nama_kelas" id="editNama" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Kelas</label>
+                            <input type="text" name="nama_kelas" id="editNama" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Kapasitas</label>
-                            <input type="number" name="kapasitas" id="editKapasitas" min="1" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kapasitas</label>
+                            <input type="number" name="kapasitas" id="editKapasitas" min="1" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Mata Kuliah</label>
-                        <select name="mata_kuliah_id" id="editMK" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Mata Kuliah</label>
+                        <select name="mata_kuliah_id" id="editMK" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                             @foreach($mataKuliah as $mk)
                             <option value="{{ $mk->id }}">{{ $mk->kode_mk }} - {{ $mk->nama_mk }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Dosen Pengampu</label>
-                        <select name="dosen_id" id="editDosen" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Dosen Pengampu</label>
+                        <select name="dosen_id" id="editDosen" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                             @foreach($dosen as $d)
                             <option value="{{ $d->id }}">{{ $d->user->name }}</option>
                             @endforeach
@@ -223,15 +223,15 @@
                     </div>
                     
                     <!-- Jadwal Section -->
-                    <div class="pt-4 border-t border-siakad-light">
-                        <h4 class="text-sm font-semibold text-siakad-dark mb-3 flex items-center gap-2">
+                    <div class="pt-4 border-t border-siakad-light dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-siakad-dark dark:text-white mb-3 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Jadwal Kuliah
                         </h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Hari</label>
-                                <select name="hari" id="editHari" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Hari</label>
+                                <select name="hari" id="editHari" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                                     <option value="">Pilih Hari</option>
                                     <option value="Senin">Senin</option>
                                     <option value="Selasa">Selasa</option>
@@ -242,24 +242,24 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Ruangan</label>
-                                <input type="text" name="ruangan" id="editRuangan" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="Contoh: LT-101">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Ruangan</label>
+                                <input type="text" name="ruangan" id="editRuangan" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Contoh: LT-101">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Jam Mulai</label>
-                                <input type="time" name="jam_mulai" id="editJamMulai" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Jam Mulai</label>
+                                <input type="time" name="jam_mulai" id="editJamMulai" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-siakad-dark mb-2">Jam Selesai</label>
-                                <input type="time" name="jam_selesai" id="editJamSelesai" class="input-saas w-full px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Jam Selesai</label>
+                                <input type="time" name="jam_selesai" id="editJamSelesai" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
-                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
                     <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
                 </div>
             </form>

@@ -16,11 +16,44 @@ class PenilaianController extends Controller
         $this->penilaianService = $penilaianService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $dosen = Auth::user()->dosen;
-        $kelasAjar = $dosen->kelas()->with(['mataKuliah', 'krsDetail'])->get();
-        return view('dosen.penilaian.index', compact('kelasAjar'));
+        $query = $dosen->kelas()->with(['mataKuliah', 'krsDetail']);
+
+        // Filter by semester
+        if ($request->filled('semester')) {
+            $query->whereHas('mataKuliah', fn($q) => $q->where('semester', $request->semester));
+        }
+
+        // Search by nama mk or kode mk
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('mataKuliah', function ($q) use ($search) {
+                $q->where('nama_mk', 'like', "%{$search}%")
+                  ->orWhere('kode_mk', 'like', "%{$search}%");
+            });
+        }
+
+        $kelasAjar = $query->get();
+
+        // Group by semester
+        $kelasGrouped = $kelasAjar->groupBy(fn($k) => $k->mataKuliah->semester);
+
+        // Get available semesters for filter
+        $semesterList = $dosen->kelas()
+            ->with('mataKuliah')
+            ->get()
+            ->pluck('mataKuliah.semester')
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($request->ajax()) {
+            return view('dosen.penilaian._cards', compact('kelasAjar', 'kelasGrouped'))->render();
+        }
+
+        return view('dosen.penilaian.index', compact('kelasAjar', 'kelasGrouped', 'semesterList'));
     }
 
     public function show($kelasId)

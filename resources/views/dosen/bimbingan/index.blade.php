@@ -34,11 +34,13 @@
             const angkatanFilter = document.getElementById('angkatanFilter');
             const tableContainer = document.getElementById('tableContainer');
             let searchTimeout;
+            let currentSort = '{{ request("sort", "angkatan") }}';
+            let currentDir = '{{ request("dir", "desc") }}';
 
             function fetchData(page = 1) {
                 const search = searchInput.value;
                 const angkatan = angkatanFilter.value;
-                const url = `{{ route('dosen.bimbingan.index') }}?page=${page}&search=${encodeURIComponent(search)}&angkatan=${encodeURIComponent(angkatan)}`;
+                const url = `{{ route('dosen.bimbingan.index') }}?page=${page}&search=${encodeURIComponent(search)}&angkatan=${encodeURIComponent(angkatan)}&sort=${currentSort}&dir=${currentDir}`;
 
                 tableContainer.style.opacity = '0.5';
 
@@ -50,6 +52,7 @@
                     tableContainer.innerHTML = html;
                     tableContainer.style.opacity = '1';
                     bindPaginationLinks();
+                    bindSortableHeaders();
                 })
                 .catch(err => {
                     console.error(err);
@@ -68,6 +71,24 @@
                 });
             }
 
+            function bindSortableHeaders() {
+                tableContainer.querySelectorAll('.sortable-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        const sortField = this.dataset.sort;
+                        
+                        // Toggle direction if same field, otherwise default to asc
+                        if (currentSort === sortField) {
+                            currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            currentSort = sortField;
+                            currentDir = 'asc';
+                        }
+                        
+                        fetchData(1);
+                    });
+                });
+            }
+
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => fetchData(), 300);
@@ -78,6 +99,7 @@
             });
 
             bindPaginationLinks();
+            bindSortableHeaders();
         });
     </script>
 </x-app-layout>

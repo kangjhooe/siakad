@@ -4,8 +4,9 @@
     </x-slot>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Profile Card -->
-        <div class="lg:col-span-1">
+        <!-- Profile Card + Academic Info -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            <!-- Profile Card -->
             <div class="card-saas p-6">
                 <div class="text-center mb-6">
                     <div class="w-24 h-24 mx-auto rounded-xl bg-siakad-primary flex items-center justify-center text-white text-4xl font-bold mb-4">
@@ -32,12 +33,35 @@
                         <span class="text-siakad-dark">{{ $mahasiswa->prodi->nama ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="text-siakad-dark">Angkatan {{ $mahasiswa->angkatan }}</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
                         <svg class="w-5 h-5 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         <span class="text-siakad-dark">PA: {{ $mahasiswa->dosenPa->user->name ?? '-' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Info (Moved here) -->
+            <div class="card-saas p-6 flex-1 flex flex-col">
+                <h3 class="font-semibold text-siakad-dark mb-4">Informasi Akademik</h3>
+                <div class="grid grid-cols-2 gap-3 flex-1">
+                    <div class="flex flex-col items-center justify-center p-4 bg-siakad-primary/10 rounded-xl">
+                        <p class="text-2xl font-bold text-siakad-primary">{{ $mahasiswa->angkatan }}</p>
+                        <p class="text-xs text-siakad-secondary mt-1">Angkatan</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-4 bg-siakad-primary/10 rounded-xl">
+                        @php
+                            $currentYear = date('Y');
+                            $semester = (($currentYear - $mahasiswa->angkatan) * 2) + (date('n') >= 7 ? 1 : 0);
+                        @endphp
+                        <p class="text-2xl font-bold text-siakad-primary">{{ min($semester, 8) }}</p>
+                        <p class="text-xs text-siakad-secondary mt-1">Semester</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-4 bg-[#456882]/10 rounded-xl">
+                        <p class="text-2xl font-bold text-[#456882]">{{ $mahasiswa->krs->count() ?? 0 }}</p>
+                        <p class="text-xs text-siakad-secondary mt-1">Total KRS</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-4 bg-emerald-500/10 rounded-xl">
+                        <p class="text-xl font-bold text-emerald-500">{{ ucfirst($mahasiswa->status ?? 'Aktif') }}</p>
+                        <p class="text-xs text-siakad-secondary mt-1">Status</p>
                     </div>
                 </div>
             </div>
@@ -58,22 +82,22 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Lengkap</label>
-                                <input type="text" name="name" value="{{ old('name', $user->name) }}" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                                <input type="text" name="name" value="{{ old('name', $user->name) }}" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card);" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Email</label>
-                                <input type="email" name="email" value="{{ old('email', $user->email) }}" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                                <input type="email" name="email" value="{{ old('email', $user->email) }}" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card);" required>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">NIM</label>
-                                <input type="text" value="{{ $mahasiswa->nim }}" class="input-saas w-full px-4 py-2.5 text-sm bg-siakad-light/30" readonly disabled>
+                                <input type="text" value="{{ $mahasiswa->nim }}" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card); opacity: 0.6;" readonly disabled>
                                 <p class="text-xs text-siakad-secondary mt-1">NIM tidak dapat diubah</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Program Studi</label>
-                                <input type="text" value="{{ $mahasiswa->prodi->nama ?? '-' }}" class="input-saas w-full px-4 py-2.5 text-sm bg-siakad-light/30" readonly disabled>
+                                <input type="text" value="{{ $mahasiswa->prodi->nama ?? '-' }}" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card); opacity: 0.6;" readonly disabled>
                             </div>
                         </div>
                     </div>
@@ -97,16 +121,16 @@
                     <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-siakad-dark mb-2">Password Lama</label>
-                            <input type="password" name="current_password" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                            <input type="password" name="current_password" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card);" required>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Password Baru</label>
-                                <input type="password" name="password" class="input-saas w-full px-4 py-2.5 text-sm" required minlength="8">
+                                <input type="password" name="password" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card);" required minlength="8">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Konfirmasi Password</label>
-                                <input type="password" name="password_confirmation" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                                <input type="password" name="password_confirmation" class="input-saas w-full px-4 py-2.5 text-sm" style="background-color: var(--bg-card);" required>
                             </div>
                         </div>
                     </div>
@@ -116,38 +140,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-
-            <!-- Academic Info (Read Only) -->
-            <div class="card-saas">
-                <div class="px-6 py-4 border-b border-siakad-light">
-                    <h3 class="font-semibold text-siakad-dark">Informasi Akademik</h3>
-                    <p class="text-xs text-siakad-secondary mt-1">Data akademik dari sistem</p>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="text-center p-4 bg-siakad-light/30 rounded-xl">
-                            <p class="text-2xl font-bold text-siakad-primary">{{ $mahasiswa->angkatan }}</p>
-                            <p class="text-xs text-siakad-secondary mt-1">Angkatan</p>
-                        </div>
-                        <div class="text-center p-4 bg-siakad-light/30 rounded-xl">
-                            @php
-                                $currentYear = date('Y');
-                                $semester = (($currentYear - $mahasiswa->angkatan) * 2) + (date('n') >= 7 ? 1 : 0);
-                            @endphp
-                            <p class="text-2xl font-bold text-siakad-primary">{{ min($semester, 8) }}</p>
-                            <p class="text-xs text-siakad-secondary mt-1">Semester</p>
-                        </div>
-                        <div class="text-center p-4 bg-siakad-light/30 rounded-xl">
-                            <p class="text-2xl font-bold text-siakad-primary">{{ $mahasiswa->krs->count() ?? 0 }}</p>
-                            <p class="text-xs text-siakad-secondary mt-1">Total KRS</p>
-                        </div>
-                        <div class="text-center p-4 bg-emerald-50 rounded-xl">
-                            <p class="text-2xl font-bold text-emerald-600">{{ ucfirst($mahasiswa->status ?? 'Aktif') }}</p>
-                            <p class="text-xs text-siakad-secondary mt-1">Status</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

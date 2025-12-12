@@ -5,7 +5,7 @@
 
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <p class="text-sm text-siakad-secondary">Kelola data mata kuliah berdasarkan kategori</p>
+            <p class="text-sm text-siakad-secondary dark:text-gray-400">Kelola data mata kuliah berdasarkan kategori</p>
         </div>
         <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-primary-saas px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -34,29 +34,29 @@
 
     <!-- Mata Kuliah Grouped by Category (Collapsible) -->
     @foreach($grouped as $prefix => $courses)
-    <div class="card-saas overflow-hidden mb-4" x-data="{ open: false }">
+    <div class="card-saas overflow-hidden mb-4 dark:bg-gray-800" x-data="{ open: false }">
         <!-- Category Header (Clickable) -->
-        <button @click="open = !open" type="button" class="w-full px-6 py-4 bg-siakad-primary/5 border-b border-siakad-light flex items-center justify-between hover:bg-siakad-primary/10 transition cursor-pointer text-left">
+        <button @click="open = !open" type="button" class="w-full px-6 py-4 bg-siakad-primary/5 dark:bg-gray-700/30 border-b border-siakad-light dark:border-gray-700 flex items-center justify-between hover:bg-siakad-primary/10 dark:hover:bg-gray-700/50 transition cursor-pointer text-left">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-siakad-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                <div class="w-10 h-10 bg-siakad-primary dark:bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
                     <span class="text-white font-bold text-sm">{{ $prefix }}</span>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-siakad-dark">{{ $categoryNames[$prefix] ?? 'Kategori ' . $prefix }}</h3>
-                    <p class="text-xs text-siakad-secondary">{{ $courses->count() }} Mata Kuliah • {{ $courses->sum('sks') }} SKS Total</p>
+                    <h3 class="font-semibold text-siakad-dark dark:text-white">{{ $categoryNames[$prefix] ?? 'Kategori ' . $prefix }}</h3>
+                    <p class="text-xs text-siakad-secondary dark:text-gray-400">{{ $courses->count() }} Mata Kuliah • {{ $courses->sum('sks') }} SKS Total</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2">
                     @foreach($courses->groupBy('semester')->sortKeys()->take(4) as $sem => $semCourses)
-                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-siakad-secondary/10 text-siakad-secondary rounded">Sem {{ $sem }}: {{ $semCourses->count() }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-siakad-secondary/10 text-siakad-secondary dark:bg-gray-700 dark:text-gray-300 rounded">Sem {{ $sem }}: {{ $semCourses->count() }}</span>
                     @endforeach
                     @if($courses->groupBy('semester')->count() > 4)
-                    <span class="text-xs text-siakad-secondary">+{{ $courses->groupBy('semester')->count() - 4 }}</span>
+                    <span class="text-xs text-siakad-secondary dark:text-gray-400">+{{ $courses->groupBy('semester')->count() - 4 }}</span>
                     @endif
                 </div>
                 <!-- Chevron Icon -->
-                <svg class="w-5 h-5 text-siakad-secondary transition-transform duration-300" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-siakad-secondary dark:text-gray-400 transition-transform duration-300" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </div>
@@ -73,30 +73,30 @@
              class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
-                    <tr class="bg-siakad-light/30">
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-16">#</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-28">Kode</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Nama Mata Kuliah</th>
-                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-20">SKS</th>
-                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-28">Semester</th>
-                        <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-32">Aksi</th>
+                    <tr class="bg-siakad-light/30 dark:bg-gray-900">
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-16">#</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-28">Kode</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Nama Mata Kuliah</th>
+                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-20">SKS</th>
+                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-28">Semester</th>
+                        <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-32">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($courses->sortBy('semester') as $idx => $mk)
-                    <tr class="border-b border-siakad-light/50 hover:bg-siakad-light/10 transition">
-                        <td class="py-4 px-5 text-sm text-siakad-secondary">{{ $idx + 1 }}</td>
+                    <tr class="border-b border-siakad-light/50 dark:border-gray-700/50 hover:bg-siakad-light/10 dark:hover:bg-gray-700/30 transition">
+                        <td class="py-4 px-5 text-sm text-siakad-secondary dark:text-gray-400">{{ $idx + 1 }}</td>
                         <td class="py-4 px-5">
-                            <span class="text-sm font-mono text-siakad-primary font-medium">{{ $mk->kode_mk }}</span>
+                            <span class="text-sm font-mono text-siakad-primary dark:text-blue-400 font-medium">{{ $mk->kode_mk }}</span>
                         </td>
                         <td class="py-4 px-5">
-                            <span class="text-sm font-medium text-siakad-dark">{{ $mk->nama_mk }}</span>
+                            <span class="text-sm font-medium text-siakad-dark dark:text-white">{{ $mk->nama_mk }}</span>
                         </td>
                         <td class="py-4 px-5 text-center">
-                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-primary/10 text-siakad-primary rounded-full">{{ $mk->sks }}</span>
+                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-primary/10 text-siakad-primary dark:bg-blue-500/10 dark:text-blue-400 rounded-full">{{ $mk->sks }}</span>
                         </td>
                         <td class="py-4 px-5 text-center">
-                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary rounded-full">Sem {{ $mk->semester }}</span>
+                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary dark:bg-gray-700 dark:text-gray-300 rounded-full">Sem {{ $mk->semester }}</span>
                         </td>
                         <td class="py-4 px-5 text-right">
                             <div class="flex items-center justify-end gap-2">
@@ -120,46 +120,45 @@
     @endforeach
 
     @if($mataKuliah->isEmpty())
-    <div class="card-saas p-12 text-center">
-        <div class="w-16 h-16 bg-siakad-light/50 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+    <div class="card-saas p-12 text-center dark:bg-gray-800">
+        <div class="w-16 h-16 bg-siakad-light/50 dark:bg-gray-700/50 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
         </div>
-        <p class="text-siakad-dark font-medium mb-1">Belum ada data mata kuliah</p>
-        <p class="text-siakad-secondary text-sm">Tambahkan mata kuliah untuk memulai</p>
+        <p class="text-siakad-dark dark:text-white font-medium mb-1">Belum ada data mata kuliah</p>
+        <p class="text-siakad-secondary dark:text-gray-400 text-sm">Tambahkan mata kuliah untuk memulai</p>
     </div>
     @endif
-
     <!-- Create Modal -->
     <div id="createModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-md animate-fade-in">
-            <div class="px-6 py-4 border-b border-siakad-light">
-                <h3 class="text-lg font-semibold text-siakad-dark">Tambah Mata Kuliah</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md animate-fade-in">
+            <div class="px-6 py-4 border-b border-siakad-light dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white">Tambah Mata Kuliah</h3>
             </div>
             <form action="{{ route('admin.mata-kuliah.store') }}" method="POST">
                 @csrf
                 <div class="p-6 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Kode MK</label>
-                        <input type="text" name="kode_mk" class="input-saas w-full px-4 py-2.5 text-sm font-mono" placeholder="Contoh: TI101, SI201, MK001" required>
-                        <p class="text-xs text-siakad-secondary mt-1">Prefix: TI=Teknik Informatika, SI=Sistem Informasi, MK=Umum, dll</p>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kode MK</label>
+                        <input type="text" name="kode_mk" class="input-saas w-full px-4 py-2.5 text-sm font-mono dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Contoh: TI101, SI201, MK001" required>
+                        <p class="text-xs text-siakad-secondary dark:text-gray-400 mt-1">Prefix: TI=Teknik Informatika, SI=Sistem Informasi, MK=Umum, dll</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Mata Kuliah</label>
-                        <input type="text" name="nama_mk" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="Masukkan nama mata kuliah" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Mata Kuliah</label>
+                        <input type="text" name="nama_mk" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Masukkan nama mata kuliah" required>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">SKS</label>
-                            <input type="number" name="sks" min="1" max="6" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="3" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">SKS</label>
+                            <input type="number" name="sks" min="1" max="6" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="3" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Semester</label>
-                            <input type="number" name="semester" min="1" max="8" class="input-saas w-full px-4 py-2.5 text-sm" placeholder="1" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Semester</label>
+                            <input type="number" name="semester" min="1" max="8" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="1" required>
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
-                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
                     <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
                 </div>
             </form>
@@ -168,34 +167,34 @@
 
     <!-- Edit Modal -->
     <div id="editModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-md animate-fade-in">
-            <div class="px-6 py-4 border-b border-siakad-light">
-                <h3 class="text-lg font-semibold text-siakad-dark">Edit Mata Kuliah</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md animate-fade-in">
+            <div class="px-6 py-4 border-b border-siakad-light dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white">Edit Mata Kuliah</h3>
             </div>
             <form id="editForm" method="POST">
                 @csrf @method('PUT')
                 <div class="p-6 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Kode MK</label>
-                        <input type="text" name="kode_mk" id="editKode" class="input-saas w-full px-4 py-2.5 text-sm font-mono" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kode MK</label>
+                        <input type="text" name="kode_mk" id="editKode" class="input-saas w-full px-4 py-2.5 text-sm font-mono dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Mata Kuliah</label>
-                        <input type="text" name="nama_mk" id="editNama" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Mata Kuliah</label>
+                        <input type="text" name="nama_mk" id="editNama" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">SKS</label>
-                            <input type="number" name="sks" id="editSks" min="1" max="6" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">SKS</label>
+                            <input type="number" name="sks" id="editSks" min="1" max="6" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-siakad-dark mb-2">Semester</label>
-                            <input type="number" name="semester" id="editSemester" min="1" max="8" class="input-saas w-full px-4 py-2.5 text-sm" required>
+                            <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Semester</label>
+                            <input type="number" name="semester" id="editSemester" min="1" max="8" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
-                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
                     <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
                 </div>
             </form>

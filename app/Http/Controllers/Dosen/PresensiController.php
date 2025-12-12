@@ -32,8 +32,14 @@ class PresensiController extends Controller
         }
 
         $kelasList = $this->presensiService->getKelasByDosen($dosen->id);
+        
+        // Group by semester
+        $kelasGrouped = $kelasList->groupBy(fn($k) => $k->mataKuliah->semester ?? 0);
+        
+        // Get semester list for filter
+        $semesterList = $kelasList->pluck('mataKuliah.semester')->unique()->sort()->values();
 
-        return view('dosen.presensi.index', compact('kelasList'));
+        return view('dosen.presensi.index', compact('kelasList', 'kelasGrouped', 'semesterList'));
     }
 
     /**

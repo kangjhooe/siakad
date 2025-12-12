@@ -153,7 +153,11 @@
         // SIAKAD Colors
         const siakadPrimary = '#234C6A';
         const siakadSecondary = '#456882';
-        const siakadLight = '#E3E3E3';
+        
+        // Detect dark mode
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? '#334155' : '#E3E3E3';
+        const textColor = isDark ? '#94A3B8' : '#456882';
 
         // SKS Chart
         const sksData = @json($sksHistory).reverse();
@@ -174,8 +178,8 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, max: 24, grid: { color: siakadLight } },
-                    x: { grid: { display: false } }
+                    y: { beginAtZero: true, max: 24, grid: { color: gridColor }, ticks: { color: textColor } },
+                    x: { grid: { display: false }, ticks: { color: textColor } }
                 }
             }
         });
@@ -190,12 +194,12 @@
                 datasets: [{
                     label: 'IPS',
                     data: ipsData.map(d => d.ips),
-                    borderColor: siakadPrimary,
-                    backgroundColor: 'rgba(35, 76, 106, 0.1)',
+                    borderColor: isDark ? '#60A5FA' : siakadPrimary,
+                    backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(35, 76, 106, 0.1)',
                     fill: true,
                     tension: 0.4,
                     pointRadius: 5,
-                    pointBackgroundColor: siakadPrimary,
+                    pointBackgroundColor: isDark ? '#60A5FA' : siakadPrimary,
                 }]
             },
             options: {
@@ -203,8 +207,8 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { min: 0, max: 4, ticks: { stepSize: 0.5 }, grid: { color: siakadLight } },
-                    x: { grid: { display: false } }
+                    y: { min: 0, max: 4, ticks: { stepSize: 0.5, color: textColor }, grid: { color: gridColor } },
+                    x: { grid: { display: false }, ticks: { color: textColor } }
                 }
             }
         });

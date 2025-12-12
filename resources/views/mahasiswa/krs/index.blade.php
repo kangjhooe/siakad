@@ -73,7 +73,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Taken Classes -->
-        <div class="lg:col-span-2">
+        <div class="{{ $krs->status == 'draft' ? 'lg:col-span-2' : 'lg:col-span-3' }}">
             <div class="card-saas overflow-hidden">
                 <div class="px-6 py-4 border-b border-siakad-light">
                     <h3 class="font-semibold text-siakad-dark">Mata Kuliah Diambil</h3>
@@ -115,6 +115,11 @@
                         <p class="text-xs text-siakad-secondary/70">Pilih kelas di samping untuk memulai</p>
                     </div>
                     @endforelse
+                </div>
+                <!-- Total SKS Footer -->
+                <div class="px-6 py-4 border-t border-siakad-light dark:border-slate-700 flex justify-between items-center" style="background-color: var(--bg-card);">
+                    <span class="font-semibold text-siakad-dark">Total SKS Diambil</span>
+                    <span class="font-bold text-siakad-primary text-lg">{{ $krs->krsDetail->sum(fn($d) => $d->kelas->mataKuliah->sks) }} SKS</span>
                 </div>
             </div>
         </div>

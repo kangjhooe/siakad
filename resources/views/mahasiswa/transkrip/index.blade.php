@@ -1,6 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        Transkrip Nilai
+        <div class="flex items-center justify-between">
+            <span>Transkrip Nilai</span>
+            <a href="{{ route('mahasiswa.export.transkrip') }}" target="_blank" class="ml-4 px-4 py-2 bg-siakad-primary text-white text-sm font-semibold rounded-lg hover:bg-siakad-dark transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2-4h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm9-2V3a1 1 0 00-1-1H6a1 1 0 00-1 1v10m3-4h8a2 2 0 012 2v4H9v-4a2 2 0 012-2z"></path></svg>
+                Cetak PDF
+            </a>
+        </div>
     </x-slot>
 
     <!-- Summary Cards -->
@@ -77,9 +83,12 @@
 
     <!-- Transcript by Semester -->
     @foreach($transcript['semesters'] ?? [] as $semester)
-    <div class="card-saas overflow-hidden mb-6">
-        <div class="px-6 py-4 border-b border-siakad-light bg-siakad-light/20 flex items-center justify-between">
-            <div>
+    <div x-data="{ open: false }" class="card-saas overflow-hidden mb-6">
+        <div @click="open = !open" class="px-6 py-4 border-b border-siakad-light dark:border-slate-700 flex items-center justify-between cursor-pointer hover:bg-siakad-light/30 dark:hover:bg-slate-700/50 transition" style="background-color: var(--bg-card);">
+            <div class="flex items-center gap-3">
+                <div class="transition-transform duration-200" :class="{ 'rotate-180': open }">
+                    <svg class="w-5 h-5 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
                 <h3 class="font-semibold text-siakad-dark">{{ $semester['semester'] }}</h3>
             </div>
             <div class="flex items-center gap-4">
@@ -87,7 +96,7 @@
                 <span class="text-sm text-siakad-secondary">SKS: <span class="font-semibold text-siakad-dark">{{ $semester['total_sks'] }}</span></span>
             </div>
         </div>
-        <div class="overflow-x-auto">
+        <div x-show="open" x-collapse style="display: none;" class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
                     <tr class="bg-siakad-light/30">
@@ -136,7 +145,7 @@
         const siakadLight = '#E3E3E3';
 
         // IPS Chart
-        const ipsData = @json($ipsHistory);
+        const ipsData = @json($ipsHistory).reverse();
         const ipsCtx = document.getElementById('ipsChart').getContext('2d');
         new Chart(ipsCtx, {
             type: 'line',

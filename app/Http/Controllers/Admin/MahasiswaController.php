@@ -29,6 +29,13 @@ class MahasiswaController extends Controller
             });
         }
 
+        // Filter by fakultas
+        if ($fakultasId = $request->get('fakultas_id')) {
+            $query->whereHas('prodi', function ($q) use ($fakultasId) {
+                $q->where('fakultas_id', $fakultasId);
+            });
+        }
+
         // Filter by prodi
         if ($prodiId = $request->get('prodi_id')) {
             $query->where('prodi_id', $prodiId);
@@ -40,10 +47,13 @@ class MahasiswaController extends Controller
         }
 
         $mahasiswa = $query->orderBy('nim')->paginate(config('siakad.pagination', 15));
-        $prodiList = Prodi::with('fakultas')->get();
+        
+        $fakultasList = \App\Models\Fakultas::orderBy('nama')->get();
+        // Eager load fakultas so we can access fakultas_id in the view for JS filtering
+        $prodiList = Prodi::with('fakultas')->orderBy('nama')->get(); 
         $angkatanList = Mahasiswa::distinct()->pluck('angkatan')->sort()->reverse();
 
-        return view('admin.mahasiswa.index', compact('mahasiswa', 'prodiList', 'angkatanList'));
+        return view('admin.mahasiswa.index', compact('mahasiswa', 'fakultasList', 'prodiList', 'angkatanList'));
     }
 
     public function show(Mahasiswa $mahasiswa)
