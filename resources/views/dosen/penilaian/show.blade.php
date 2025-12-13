@@ -11,19 +11,19 @@
     </div>
 
     <!-- Class Info -->
-    <div class="card-saas p-6 mb-6 bg-gradient-to-r from-siakad-primary to-emerald-600 text-white border-none">
+    <div class="card-saas p-6 mb-6 border-none" style="background-color: #1B3C53;">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-xl font-bold">{{ $kelas->mataKuliah->nama_mk }}</h3>
+                <h3 class="text-xl font-bold text-white">{{ $kelas->mataKuliah->nama_mk }}</h3>
                 <p class="text-white/80 mt-1">{{ $kelas->mataKuliah->kode_mk }} • {{ $kelas->mataKuliah->sks }} SKS</p>
-                <div class="flex items-center gap-3 mt-4 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-lg">
+                <div class="flex items-center gap-3 mt-4 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-lg text-white">
                     <span>Kelas {{ $kelas->nama_kelas }}</span>
                     <span class="w-1 h-1 bg-white rounded-full"></span>
                     <span>{{ $kelas->krsDetail->count() }} Mahasiswa</span>
                 </div>
             </div>
             <div class="hidden sm:block">
-                <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-bold">
+                <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-bold text-white">
                     {{ substr($kelas->nama_kelas, 0, 1) }}
                 </div>
             </div>

@@ -3,18 +3,28 @@
         Data Fakultas
     </x-slot>
 
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <p class="text-sm text-siakad-secondary dark:text-gray-400">Kelola data fakultas dalam sistem</p>
-        </div>
-        <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-primary-saas px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            Tambah Fakultas
-        </button>
+    <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+        <p class="text-sm text-siakad-secondary dark:text-gray-400 hidden md:block">
+            Kelola data fakultas dalam sistem
+        </p>
     </div>
 
+    <button
+        onclick="document.getElementById('createModal').classList.remove('hidden')"
+        class="btn-primary-saas w-full md:w-auto px-4 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2"
+    >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Tambah Fakultas
+    </button>
+</div>
+
     <!-- Table Card -->
-    <div class="card-saas overflow-hidden dark:bg-gray-800">
+    <!-- Table Card (Desktop) -->
+    <div class="hidden md:block card-saas overflow-hidden dark:bg-gray-800">
         <div class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
@@ -68,6 +78,44 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <!-- Mobile Card List -->
+    <div class="md:hidden space-y-4">
+        @forelse($fakultas as $f)
+        <div class="card-saas p-4 dark:bg-gray-800">
+            <div class="flex items-start justify-between mb-3">
+                <h4 class="font-bold text-siakad-dark dark:text-white">{{ $f->nama }}</h4>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg text-center">
+                    <span class="block text-[10px] text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Prodi</span>
+                    <span class="font-bold text-siakad-primary dark:text-blue-400">{{ $f->prodi_count ?? $f->prodi->count() }}</span>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg text-center">
+                    <span class="block text-[10px] text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Mahasiswa</span>
+                    <span class="font-bold text-siakad-dark dark:text-white">{{ $f->prodi->sum(fn($p) => $p->mahasiswa->count()) }}</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-t border-siakad-light dark:border-gray-700">
+                <button onclick="editFakultas({{ $f->id }}, '{{ $f->nama }}')" class="flex-1 py-2 text-sm font-medium text-siakad-secondary bg-siakad-light/50 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-siakad-light hover:text-siakad-primary dark:hover:bg-gray-600 transition text-center">
+                    Edit
+                </button>
+                <form action="{{ url('admin/fakultas/'.$f->id) }}" method="POST" onsubmit="return confirm('Hapus fakultas ini?')" class="flex-1">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="w-full py-2 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/40 transition">
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+        @empty
+        <div class="card-saas p-8 text-center">
+            <p class="text-siakad-secondary dark:text-gray-400 mb-2">Belum ada data fakultas</p>
+        </div>
+        @endforelse
     </div>
 
     <!-- Create Modal -->

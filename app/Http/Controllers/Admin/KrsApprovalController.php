@@ -14,8 +14,33 @@ class KrsApprovalController extends Controller
         
         $krsList = Krs::with(['mahasiswa.user', 'mahasiswa.prodi', 'tahunAkademik', 'krsDetail.kelas.mataKuliah'])
             ->when($status !== 'all', fn($q) => $q->where('status', $status))
-            ->orderBy('updated_at', 'desc')
-            ->paginate(config('siakad.pagination', 15));
+            ->when($status !== 'all', fn($q) => $q->where('status', $status));
+
+        // Sorting
+        $sortColumn = $request->get('sort', 'updated_at');
+        $sortDirection = $request->get('order', 'desc');
+
+        if ($sortColumn === 'name') {
+            $krsList = $krsList->join('mahasiswa', 'krs.mahasiswa_id', '=', 'mahasiswa.id')
+                             ->join('users', 'mahasiswa.user_id', '=', 'users.id')
+                             ->select('krs.*')
+                             ->orderBy('users.name', $sortDirection);
+        } elseif ($sortColumn === 'nim') {
+            $krsList = $krsList->join('mahasiswa', 'krs.mahasiswa_id', '=', 'mahasiswa.id')
+                             ->select('krs.*')
+                             ->orderBy('mahasiswa.nim', $sortDirection);
+        } elseif ($sortColumn === 'prodi') {
+             $krsList = $krsList->join('mahasiswa', 'krs.mahasiswa_id', '=', 'mahasiswa.id')
+                              ->join('prodi', 'mahasiswa.prodi_id', '=', 'prodi.id')
+                              ->select('krs.*')
+                              ->orderBy('prodi.nama', $sortDirection);
+        } elseif ($sortColumn === 'status') {
+             $krsList = $krsList->orderBy('status', $sortDirection);
+        } else {
+             $krsList = $krsList->orderBy('updated_at', 'desc');
+        }
+
+        $krsList = $krsList->paginate(config('siakad.pagination', 15))->withQueryString();
 
         $statusCounts = [
             'pending' => Krs::where('status', 'pending')->count(),

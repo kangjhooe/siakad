@@ -15,13 +15,27 @@ use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Mahasiswa\KrsController;
 use App\Http\Controllers\Mahasiswa\TranskripController;
 use App\Http\Controllers\Dosen\PenilaianController;
+use App\Http\Controllers\HealthController;
 
+// Health check routes (no auth required)
+Route::get('/health', [HealthController::class, 'index'])->name('health');
+Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
+
+// Redirect root to login page
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
+// Redirect generic dashboard to role-specific dashboard
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $user = auth()->user();
+    
+    return match($user->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'dosen' => redirect()->route('dosen.dashboard'),
+        'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
+        default => redirect()->route('login'),
+    };
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -57,6 +71,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/prodi/{prodi}', [ProdiController::class, 'destroy'])->name('prodi.destroy');
 
     // Master Data - Mata Kuliah
+    Route::get('/mata-kuliah/export', [MataKuliahController::class, 'export'])->name('mata-kuliah.export');
     Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah.index');
     Route::post('/mata-kuliah', [MataKuliahController::class, 'store'])->name('mata-kuliah.store');
     Route::put('/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'update'])->name('mata-kuliah.update');
@@ -79,6 +94,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/krs-approval/bulk-approve', [KrsApprovalController::class, 'bulkApprove'])->name('krs-approval.bulk-approve');
 
     // Mahasiswa Management
+    Route::get('/mahasiswa/export', [MahasiswaController::class, 'export'])->name('mahasiswa.export');
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
     Route::get('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'show'])->name('mahasiswa.show');
 
@@ -117,10 +133,10 @@ Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasi
     Route::get('/dashboard', [\App\Http\Controllers\Mahasiswa\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/krs', [KrsController::class, 'index'])->name('krs.index');
-    Route::post('/krs', [KrsController::class, 'store'])->name('krs.store');
-    Route::delete('/krs/{detailId}', [KrsController::class, 'destroy'])->name('krs.destroy');
-    Route::post('/krs/submit', [KrsController::class, 'submit'])->name('krs.submit');
-    Route::post('/krs/revise', [KrsController::class, 'revise'])->name('krs.revise');
+    Route::post('/krs', [KrsController::class, 'store'])->middleware('throttle:krs')->name('krs.store');
+    Route::delete('/krs/{detailId}', [KrsController::class, 'destroy'])->middleware('throttle:krs')->name('krs.destroy');
+    Route::post('/krs/submit', [KrsController::class, 'submit'])->middleware('throttle:krs')->name('krs.submit');
+    Route::post('/krs/revise', [KrsController::class, 'revise'])->middleware('throttle:krs')->name('krs.revise');
     
     // Transkrip
     Route::get('/transkrip', [TranskripController::class, 'index'])->name('transkrip.index');
@@ -145,6 +161,10 @@ Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasi
     Route::get('/export/transkrip', [\App\Http\Controllers\Mahasiswa\ExportController::class, 'transkrip'])->name('export.transkrip');
     Route::get('/export/khs/{tahunAkademik}', [\App\Http\Controllers\Mahasiswa\ExportController::class, 'khs'])->name('export.khs');
 
+    // AI Academic Advisor
+    Route::get('/ai-advisor', [\App\Http\Controllers\Mahasiswa\AiAdvisorController::class, 'index'])->name('ai-advisor.index');
+    Route::post('/ai-advisor/chat', [\App\Http\Controllers\Mahasiswa\AiAdvisorController::class, 'chat'])->name('ai-advisor.chat');
+
     // Skripsi
     Route::get('/skripsi', [\App\Http\Controllers\Mahasiswa\SkripsiController::class, 'index'])->name('skripsi.index');
     Route::get('/skripsi/create', [\App\Http\Controllers\Mahasiswa\SkripsiController::class, 'create'])->name('skripsi.create');
@@ -164,7 +184,6 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::get('/dashboard', [\App\Http\Controllers\Dosen\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('penilaian.index');
-    Route::post('/penilaian', [PenilaianController::class, 'store'])->name('penilaian.store');
 
     // Bimbingan (Dosen PA)
     Route::get('/bimbingan', [\App\Http\Controllers\Dosen\BimbinganController::class, 'index'])->name('bimbingan.index');
@@ -200,7 +219,7 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     // Penilaian
     Route::get('/penilaian', [\App\Http\Controllers\Dosen\PenilaianController::class, 'index'])->name('penilaian.index');
     Route::get('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'show'])->name('penilaian.show');
-    Route::post('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'store'])->name('penilaian.store');
+    Route::post('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'store'])->middleware('throttle:penilaian')->name('penilaian.store');
 });
 
 require __DIR__.'/auth.php';

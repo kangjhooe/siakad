@@ -5,14 +5,14 @@
 
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <p class="text-sm text-siakad-secondary">Daftar KRS mahasiswa bimbingan yang menunggu persetujuan</p>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
             <!-- Search -->
-            <div class="relative">
-                <input type="text" id="searchInput" placeholder="Cari nama/NIM..." class="input-saas pl-9 pr-4 py-2 text-sm w-48">
+            <div class="relative w-full md:w-auto">
+                <input type="text" id="searchInput" placeholder="Cari nama/NIM..." class="input-saas pl-9 pr-4 py-2 text-sm w-full md:w-48">
                 <svg class="w-4 h-4 text-siakad-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <!-- Filter Status -->
-            <select id="statusFilter" class="input-saas text-sm py-2">
+            <select id="statusFilter" class="input-saas text-sm py-2 w-full md:w-auto">
                 <option value="pending" {{ request('status', 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
                 <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>

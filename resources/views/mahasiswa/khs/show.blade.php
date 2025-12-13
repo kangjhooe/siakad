@@ -1,6 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
-        KHS {{ $tahunAkademik->tahun }} - Semester {{ $tahunAkademik->semester }}
+        <span class="md:hidden">KHS {{ $tahunAkademik->tahun }} {{ $tahunAkademik->semester }}</span>
+        <span class="hidden md:inline">KHS {{ $tahunAkademik->tahun }} - Semester {{ $tahunAkademik->semester }}</span>
     </x-slot>
 
     <div class="mb-6">
@@ -12,34 +13,41 @@
 
     <!-- Header Card -->
     <div class="rounded-2xl p-6 bg-[#1B3C53] text-white mb-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-                <h2 class="text-2xl font-bold">Kartu Hasil Studi</h2>
-                <p class="opacity-80 mt-1">{{ $tahunAkademik->tahun }} - Semester {{ $tahunAkademik->semester }}</p>
-                <div class="mt-4 flex items-center gap-6">
+                <h2 class="text-xl md:text-2xl font-bold">Kartu Hasil Studi</h2>
+                <p class="opacity-80 mt-1 text-sm md:text-base">
+                    <span class="md:hidden">{{ $tahunAkademik->tahun }} {{ $tahunAkademik->semester }}</span>
+                    <span class="hidden md:inline">{{ $tahunAkademik->tahun }} - Semester {{ $tahunAkademik->semester }}</span>
+                </p>
+                <div class="mt-4 flex flex-col md:flex-row gap-4 md:items-center md:gap-6">
                     <div>
-                        <p class="text-xs opacity-60">Nama</p>
-                        <p class="font-semibold">{{ $mahasiswa->user->name }}</p>
+                        <p class="text-[10px] md:text-xs opacity-60 uppercase tracking-wide">Nama</p>
+                        <p class="font-semibold text-sm md:text-base">{{ $mahasiswa->user->name }}</p>
                     </div>
                     <div>
-                        <p class="text-xs opacity-60">NIM</p>
-                        <p class="font-semibold">{{ $mahasiswa->nim }}</p>
+                        <p class="text-[10px] md:text-xs opacity-60 uppercase tracking-wide">NIM</p>
+                        <p class="font-semibold text-sm md:text-base">{{ $mahasiswa->nim }}</p>
                     </div>
                     <div>
-                        <p class="text-xs opacity-60">Program Studi</p>
-                        <p class="font-semibold">{{ $mahasiswa->prodi->nama_prodi ?? '-' }}</p>
+                        <p class="text-[10px] md:text-xs opacity-60 uppercase tracking-wide">Program Studi</p>
+                        <p class="font-semibold text-sm md:text-base">{{ $mahasiswa->prodi->nama_prodi ?? '-' }}</p>
                     </div>
                 </div>
             </div>
-            <div class="text-right">
-                <p class="text-xs opacity-60">IPS Semester Ini</p>
-                <p class="text-5xl font-bold">{{ number_format($ipsData['ips'], 2) }}</p>
-                <p class="text-sm opacity-80 mt-1">{{ $ipsData['total_sks'] }} SKS</p>
+            <div class="mt-2 md:mt-0 pt-4 md:pt-0 border-t border-white/10 md:border-0 md:text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
+                <div>
+                    <p class="text-xs opacity-60">IPS Semester Ini</p>
+                    <p class="text-4xl md:text-5xl font-bold">{{ number_format($ipsData['ips'], 2) }}</p>
+                </div>
+                <div class="md:mt-1">
+                    <p class="text-sm opacity-80 bg-white/10 px-3 py-1 rounded-lg">{{ $ipsData['total_sks'] }} SKS</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
         <!-- Stats Cards -->
         <div class="card-saas p-5 text-center">
             <div class="w-12 h-12 rounded-xl bg-siakad-primary/10 flex items-center justify-center mx-auto mb-3">

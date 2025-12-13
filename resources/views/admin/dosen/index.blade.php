@@ -20,21 +20,53 @@
     </div>
 
     <!-- Table Card -->
-    <div class="card-saas overflow-hidden dark:bg-gray-800">
+    <!-- Table Card (Desktop) -->
+    <div class="hidden md:block card-saas overflow-hidden dark:bg-gray-800">
         <div class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
-                    <tr class="bg-siakad-light/30 dark:bg-gray-900">
+                    <tr class="bg-siakad-light/30 dark:bg-gray-900 border-b border-siakad-light dark:border-gray-700">
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-16">#</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Dosen</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">NIDN</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Prodi</th>
+                        
+                        <!-- Sortable: Dosen (Name) -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">
+                            <a href="{{ route('admin.dosen.index', array_merge(request()->all(), ['sort' => 'name', 'order' => request('sort') == 'name' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                Dosen
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'name' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'name' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'name' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
+                        <!-- Sortable: NIDN -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">
+                            <a href="{{ route('admin.dosen.index', array_merge(request()->all(), ['sort' => 'nidn', 'order' => request('sort') == 'nidn' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                NIDN
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'nidn' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'nidn' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'nidn' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
+                        <!-- Sortable: Prodi -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">
+                            <a href="{{ route('admin.dosen.index', array_merge(request()->all(), ['sort' => 'prodi', 'order' => request('sort') == 'prodi' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                Prodi
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'prodi' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'prodi' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'prodi' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Kelas Diampu</th>
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Mhs Bimbingan</th>
                         <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-siakad-light dark:divide-gray-700">
                     @forelse($dosen as $index => $d)
                     <tr class="border-b border-siakad-light/50 dark:border-gray-700/50">
                         <td class="py-4 px-5 text-sm text-siakad-secondary dark:text-gray-400">{{ $dosen->firstItem() + $index }}</td>
@@ -79,10 +111,53 @@
                 </tbody>
             </table>
         </div>
-        @if($dosen->hasPages())
-        <div class="px-5 py-4 border-t border-siakad-light dark:border-gray-700">
-            {{ $dosen->links() }}
-        </div>
-        @endif
     </div>
+
+    <!-- Mobile Card List -->
+    <div class="md:hidden space-y-4">
+        @forelse($dosen as $d)
+        <div class="card-saas p-4 dark:bg-gray-800">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-siakad-secondary dark:bg-gray-700 flex items-center justify-center text-white text-sm font-semibold">
+                        {{ strtoupper(substr($d->user->name ?? '-', 0, 1)) }}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-siakad-dark dark:text-white">{{ $d->user->name ?? '-' }}</h4>
+                        <p class="text-xs text-siakad-secondary dark:text-gray-400 font-mono">{{ $d->nidn }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-sm text-siakad-secondary dark:text-gray-400 mb-4">
+                <div class="col-span-2">
+                    <span class="block text-xs text-gray-400">Prodi</span>
+                    <span class="font-medium text-siakad-dark dark:text-gray-200">{{ $d->prodi->nama ?? '-' }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-gray-400">Kelas Diampu</span>
+                    <span class="font-medium text-siakad-dark dark:text-gray-200">{{ $d->kelas_count ?? $d->kelas->count() }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-gray-400">Mhs Bimbingan</span>
+                    <span class="font-medium text-siakad-dark dark:text-gray-200">{{ $d->mahasiswa_bimbingan_count ?? $d->mahasiswaBimbingan->count() }}</span>
+                </div>
+            </div>
+
+            <a href="{{ route('admin.dosen.show', $d) }}" class="flex items-center justify-center w-full py-2 bg-siakad-light dark:bg-gray-700 text-siakad-dark dark:text-white font-medium rounded-lg hover:bg-gray-200 transition text-sm">
+                Detail Dosen
+            </a>
+        </div>
+        @empty
+        <div class="card-saas p-8 text-center">
+            <p class="text-siakad-secondary dark:text-gray-400">Tidak ada data dosen</p>
+        </div>
+        @endforelse
+    </div>
+
+    @if($dosen->hasPages())
+    <div class="card-saas px-5 py-4 border-t border-siakad-light dark:border-gray-700 dark:bg-gray-800 mt-4 md:mt-0">
+        {{ $dosen->links() }}
+    </div>
+    @endif
 </x-app-layout>

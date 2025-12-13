@@ -8,14 +8,44 @@ use Illuminate\Http\Request;
 
 class RuanganController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $ruanganList = Ruangan::orderBy('kode_ruangan')->get();
+        // Query for Main Table (Paginated & Sorted)
+        $query = Ruangan::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_ruangan', 'like', "%{$search}%")
+                  ->orWhere('kode_ruangan', 'like', "%{$search}%")
+                  ->orWhere('gedung', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sortColumn = $request->get('sort', 'kode_ruangan');
+        $sortDirection = $request->get('order', 'asc');
+        $allowedSorts = ['kode_ruangan', 'nama_ruangan', 'kapasitas', 'gedung', 'lantai', 'is_active'];
+
+        if (in_array($sortColumn, $allowedSorts)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('kode_ruangan', 'asc');
+        }
         
-        // Group by gedung for stats
-        $perGedung = $ruanganList->groupBy('gedung');
+        $ruanganList = $query->paginate(20)->withQueryString();
         
-        return view('admin.ruangan.index', compact('ruanganList', 'perGedung'));
+        // Stats Calculation (Separate from pagination)
+        // We can optimize this by doing direct aggregates instead of fetching all objects
+        $stats = [
+            'total' => Ruangan::count(),
+            'active' => Ruangan::where('is_active', true)->count(),
+            'capacity' => Ruangan::sum('kapasitas'),
+            'gedung_count' => Ruangan::distinct('gedung')->count('gedung'),
+        ];
+        
+        return view('admin.ruangan.index', compact('ruanganList', 'stats'));
     }
 
     public function store(Request $request)

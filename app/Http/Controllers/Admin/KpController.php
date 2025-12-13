@@ -26,7 +26,31 @@ class KpController extends Controller
             });
         }
 
-        $kpList = $query->orderBy('created_at', 'desc')->paginate(20);
+        // Sorting
+        $sortColumn = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('order', 'desc');
+
+        if ($sortColumn === 'mahasiswa_name') {
+            $query->join('mahasiswa', 'kerja_praktek.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->join('users', 'mahasiswa.user_id', '=', 'users.id')
+                  ->select('kerja_praktek.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif ($sortColumn === 'mahasiswa_nim') {
+            $query->join('mahasiswa', 'kerja_praktek.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->select('kerja_praktek.*')
+                  ->orderBy('mahasiswa.nim', $sortDirection);
+        } elseif ($sortColumn === 'pembimbing_name') {
+            $query->leftJoin('dosen', 'kerja_praktek.pembimbing_id', '=', 'dosen.id')
+                  ->leftJoin('users', 'dosen.user_id', '=', 'users.id')
+                  ->select('kerja_praktek.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif (in_array($sortColumn, ['nama_perusahaan', 'status', 'created_at'])) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $kpList = $query->paginate(20)->withQueryString();
         $dosenList = Dosen::with('user')->get();
         $statusList = KerjaPraktek::getStatusList();
 

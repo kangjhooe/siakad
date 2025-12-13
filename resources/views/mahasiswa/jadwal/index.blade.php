@@ -53,7 +53,7 @@
             </div>
             
             <!-- View Toggle -->
-            <div class="flex items-center gap-1 bg-siakad-light dark:bg-slate-700 p-1 rounded-lg self-start sm:self-auto">
+            <div class="flex items-center gap-1 bg-siakad-light dark:bg-slate-700 p-1 rounded-lg self-start sm:self-auto hidden md:block">
                 <button @click="viewMode = 'card'" 
                     :class="viewMode === 'card' ? 'bg-white shadow-sm text-[#234C6A]' : 'text-slate-400'"
                     class="p-2 rounded-md transition">

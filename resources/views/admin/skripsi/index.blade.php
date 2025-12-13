@@ -67,17 +67,58 @@
         </form>
     </div>
 
-    <!-- Table -->
-    <div class="card-saas overflow-hidden dark:bg-gray-800">
+    <!-- Table Card (Desktop) -->
+    <div class="hidden md:block card-saas overflow-hidden dark:bg-gray-800">
         <div class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
                     <tr class="bg-siakad-light/30 dark:bg-gray-900">
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">#</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">Mahasiswa</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">Judul</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">Pembimbing</th>
-                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">Status</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase w-16">#</th>
+                        
+                        <!-- Sortable: Mahasiswa -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'mahasiswa_name', 'order' => request('sort') == 'mahasiswa_name' && request('order') == 'asc' ? 'desc' : 'asc']) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                Mahasiswa
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'mahasiswa_name' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'mahasiswa_name' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'mahasiswa_name' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
+                        <!-- Sortable: Judul -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'judul', 'order' => request('sort') == 'judul' && request('order') == 'asc' ? 'desc' : 'asc']) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                Judul
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'judul' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'judul' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'judul' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
+                        <!-- Sortable: Pembimbing -->
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'pembimbing_name', 'order' => request('sort') == 'pembimbing_name' && request('order') == 'asc' ? 'desc' : 'asc']) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition">
+                                Pembimbing
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'pembimbing_name' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'pembimbing_name' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'pembimbing_name' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
+                        <!-- Sortable: Status -->
+                        <th class="text-center py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'status', 'order' => request('sort') == 'status' && request('order') == 'asc' ? 'desc' : 'asc']) }}" class="group flex items-center gap-1 hover:text-siakad-primary transition justify-center">
+                                Status
+                                <span class="flex flex-col text-[10px] leading-none {{ request('sort') == 'status' ? 'text-siakad-primary' : 'text-gray-300' }}">
+                                    <i class="opacity-{{ request('sort') == 'status' && request('order') == 'asc' ? '100' : '40' }}">▲</i>
+                                    <i class="opacity-{{ request('sort') == 'status' && request('order') == 'desc' ? '100' : '40' }}">▼</i>
+                                </span>
+                            </a>
+                        </th>
+
                         <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase">Aksi</th>
                     </tr>
                 </thead>
@@ -120,10 +161,58 @@
                 </tbody>
             </table>
         </div>
-        @if($skripsiList->hasPages())
-        <div class="px-5 py-4 border-t border-siakad-light dark:border-gray-700">
-            {{ $skripsiList->links() }}
-        </div>
-        @endif
     </div>
+
+    <!-- Mobile Card List -->
+    <div class="md:hidden space-y-4">
+        @forelse($skripsiList as $skripsi)
+        <div class="card-saas p-4 dark:bg-gray-800">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-siakad-primary dark:bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+                        {{ strtoupper(substr($skripsi->mahasiswa->user->name ?? '-', 0, 1)) }}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-siakad-dark dark:text-white">{{ $skripsi->mahasiswa->user->name }}</h4>
+                        <p class="text-xs text-siakad-secondary dark:text-gray-400 font-mono">{{ $skripsi->mahasiswa->nim }}</p>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 text-[10px] font-medium rounded-full bg-{{ $skripsi->status_color }}-100 text-{{ $skripsi->status_color }}-700 dark:bg-{{ $skripsi->status_color }}-900/50 dark:text-{{ $skripsi->status_color }}-400">{{ $skripsi->status_label }}</span>
+            </div>
+
+            <div class="mb-4">
+                <p class="text-sm font-medium text-siakad-dark dark:text-white line-clamp-2 mb-1">{{ $skripsi->judul }}</p>
+                @if($skripsi->bidang_kajian)
+                <p class="text-xs text-siakad-secondary dark:text-gray-400">{{ $skripsi->bidang_kajian }}</p>
+                @endif
+            </div>
+
+            <div class="bg-siakad-light/30 dark:bg-gray-700/30 rounded-lg p-3 mb-4">
+                <p class="text-xs text-siakad-secondary dark:text-gray-400 mb-1">Pembimbing</p>
+                @if($skripsi->pembimbing1)
+                <p class="text-sm font-medium text-siakad-dark dark:text-white">{{ $skripsi->pembimbing1->user->name }}</p>
+                @if($skripsi->pembimbing2)
+                <p class="text-xs text-siakad-secondary dark:text-gray-400">{{ $skripsi->pembimbing2->user->name }}</p>
+                @endif
+                @else
+                <span class="text-amber-600 dark:text-amber-400 text-xs">Belum ditentukan</span>
+                @endif
+            </div>
+
+            <a href="{{ route('admin.skripsi.show', $skripsi) }}" class="flex items-center justify-center w-full py-2 bg-siakad-light dark:bg-gray-700 text-siakad-dark dark:text-white font-medium rounded-lg hover:bg-gray-200 transition text-sm">
+                Lihat Detail
+            </a>
+        </div>
+        @empty
+        <div class="card-saas p-8 text-center">
+            <p class="text-siakad-secondary dark:text-gray-400">Tidak ada data skripsi</p>
+        </div>
+        @endforelse
+    </div>
+
+    @if($skripsiList->hasPages())
+    <div class="card-saas px-5 py-4 border-t border-siakad-light dark:border-gray-700 dark:bg-gray-800 mt-4 md:mt-0">
+        {{ $skripsiList->links() }}
+    </div>
+    @endif
 </x-app-layout>

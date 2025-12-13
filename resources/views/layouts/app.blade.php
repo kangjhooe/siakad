@@ -16,6 +16,13 @@
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
+            // Sidebar state - apply immediately to prevent FOUC
+            (function() {
+                var sidebarState = localStorage.getItem('sidebarOpen');
+                if (sidebarState === 'false') {
+                    document.documentElement.classList.add('sidebar-collapsed-init');
+                }
+            })();
         </script>
 
         <!-- Scripts -->
@@ -35,6 +42,10 @@
                 --border-color: #E3E3E3;
             }
             
+            html {
+                scroll-behavior: smooth;
+            }
+            
             .dark {
                 --bg-body: #111827;
                 --bg-card: #1F2937;
@@ -50,6 +61,17 @@
                 background-color: var(--bg-body);
                 color: var(--text-primary);
                 transition: background-color 0.3s ease, color 0.3s ease;
+            }
+
+            /* Ensure gradient cards with text-white work in light mode */
+            .bg-gradient-to-r, 
+            .bg-gradient-to-l, 
+            .bg-gradient-to-t, 
+            .bg-gradient-to-b {
+                color: inherit;
+            }
+            [style*="color: white"] * {
+                color: inherit;
             }
 
             /* Sidebar Links */
@@ -177,43 +199,127 @@
                 animation: fadeIn 0.2s ease-out;
             }
 
-            /* Sidebar Collapse */
-            .sidebar-collapsed .sidebar-text {
-                display: none;
+            /* Sidebar Collapse - Super Smooth Animations */
+            aside {
+                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            .sidebar-collapsed .sidebar-logo-text {
-                display: none;
+            
+            .sidebar-text,
+            .sidebar-logo-text,
+            .sidebar-section-title,
+            .sidebar-user-info {
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                opacity: 1;
+                transform: translateX(0);
             }
-            .sidebar-collapsed .sidebar-section-title {
-                display: none;
-            }
+            
+            .sidebar-collapsed .sidebar-text,
+            .sidebar-collapsed .sidebar-logo-text,
+            .sidebar-collapsed .sidebar-section-title,
             .sidebar-collapsed .sidebar-user-info {
-                display: none;
+                opacity: 0;
+                transform: translateX(-10px);
+                pointer-events: none;
+                width: 0;
+                overflow: hidden;
+                white-space: nowrap;
             }
+            
+            .sidebar-link {
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
             .sidebar-collapsed .sidebar-link {
                 justify-content: center;
                 padding-left: 0;
                 padding-right: 0;
+                gap: 0;
             }
+            
+            .sidebar-link svg {
+                transition: margin 0.25s ease;
+                flex-shrink: 0;
+            }
+            
             .sidebar-collapsed .sidebar-link svg {
                 margin: 0;
             }
+            
+            .user-section {
+                transition: justify-content 0.25s ease;
+            }
+            
             .sidebar-collapsed .user-section {
                 justify-content: center;
+                gap: 0;
             }
+            
             .sidebar-toggle-icon {
-                transition: transform 0.2s ease;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
+            
             .sidebar-collapsed .sidebar-toggle-icon {
                 transform: rotate(180deg);
             }
+            
+            .logo-section {
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
             .sidebar-collapsed .logo-section {
                 justify-content: center;
                 padding-left: 0;
                 padding-right: 0;
             }
+            
+            .sidebar-collapsed .logo-section > div {
+                justify-content: center;
+                gap: 0;
+            }
+            
+            .toggle-btn {
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                opacity: 1;
+            }
+            
             .sidebar-collapsed .toggle-btn {
-                display: none;
+                opacity: 0;
+                pointer-events: none;
+                position: absolute;
+            }
+
+            /* Initial sidebar collapsed state (before Alpine loads) */
+            .sidebar-collapsed-init aside {
+                width: 5rem !important; /* w-20 */
+            }
+            .sidebar-collapsed-init .sidebar-text,
+            .sidebar-collapsed-init .sidebar-logo-text,
+            .sidebar-collapsed-init .sidebar-section-title,
+            .sidebar-collapsed-init .sidebar-user-info {
+                opacity: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
+            }
+            .sidebar-collapsed-init .sidebar-link {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+                gap: 0;
+            }
+            .sidebar-collapsed-init .logo-section {
+                justify-content: center;
+            }
+            .sidebar-collapsed-init .logo-section > div {
+                justify-content: center;
+                gap: 0;
+            }
+            .sidebar-collapsed-init .user-section {
+                justify-content: center;
+                gap: 0;
+            }
+            .sidebar-collapsed-init .toggle-btn {
+                opacity: 0;
+                pointer-events: none;
             }
 
             /* Prevent transition on page load */
@@ -238,15 +344,37 @@
         </script>
     </head>
     <body class="antialiased no-transition" 
-          x-data="{ sidebarOpen: true }" 
+          x-data="{ 
+              sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false', 
+              mobileSidebarOpen: false 
+          }" 
           :class="{ 'sidebar-collapsed': !sidebarOpen }" 
-          x-init="setTimeout(() => document.body.classList.remove('no-transition'), 100)">
+          x-init="
+              setTimeout(() => document.body.classList.remove('no-transition'), 100);
+              $watch('sidebarOpen', val => {
+                  localStorage.setItem('sidebarOpen', val);
+                  document.documentElement.classList.toggle('sidebar-collapsed-init', !val);
+              });
+          ">
+        
+        <!-- Mobile Sidebar Overlay (not for mahasiswa) -->
+        @if(Auth::user()->role !== 'mahasiswa')
+        <div x-cloak x-show="mobileSidebarOpen" @click="mobileSidebarOpen = false" class="fixed inset-0 z-30 bg-gray-900/50 backdrop-blur-sm md:hidden transition-opacity duration-300"></div>
+        @endif
+
         <div class="min-h-screen flex">
-            <!-- Sidebar -->
-            <aside class="w-64 fixed h-full z-30 transition-all duration-300 hidden md:block" :class="{ 'w-64': sidebarOpen, 'w-20': !sidebarOpen }" style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
+            <!-- Sidebar (hidden on mobile for mahasiswa since they have bottom nav) -->
+            <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 transform md:translate-x-0 md:sticky md:top-0 md:h-screen {{ Auth::user()->role === 'mahasiswa' ? 'hidden md:block' : '' }}"
+                   :class="{ 
+                       'translate-x-0': mobileSidebarOpen, 
+                       '-translate-x-full': !mobileSidebarOpen,
+                       'w-64': sidebarOpen, 
+                       'w-20': !sidebarOpen && !mobileSidebarOpen 
+                   }"
+                   style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
+                
                 <!-- Logo -->
                 <div class="h-16 flex items-center justify-between px-4 logo-section" style="border-bottom: 1px solid var(--border-color);">
-
                     <div class="flex items-center gap-3 overflow-hidden">
                         <button @click="if(!sidebarOpen) sidebarOpen = true" :class="!sidebarOpen ? 'cursor-pointer hover:bg-siakad-primary/80' : 'cursor-default'" class="w-9 h-9 rounded-lg bg-siakad-primary flex items-center justify-center flex-shrink-0 transition">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,8 +385,13 @@
                             <p class="text-[11px] tracking-wide" style="color: var(--text-secondary);">Academic Management</p>
                         </div>
                     </div>
-                    <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-lg transition flex-shrink-0 toggle-btn" style="color: var(--text-secondary);">
+                    <!-- Desktop Toggle -->
+                    <button @click="sidebarOpen = !sidebarOpen" class="hidden md:block p-2 rounded-lg transition flex-shrink-0 toggle-btn" style="color: var(--text-secondary);">
                         <svg class="w-4 h-4 sidebar-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+                    </button>
+                    <!-- Mobile Close -->
+                    <button @click="mobileSidebarOpen = false" class="md:hidden p-2 rounded-lg transition flex-shrink-0" style="color: var(--text-secondary);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
@@ -376,6 +509,14 @@
                     </a>
 
                     <div class="pt-4 pb-1">
+                        <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">AI Assistant</p>
+                    </div>
+                    <a href="{{ url('mahasiswa/ai-advisor') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/ai-advisor*') ? 'active' : '' }} bg-gradient-to-r from-purple-500/10 to-indigo-500/10 hover:from-purple-500/20 hover:to-indigo-500/20">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        <span class="sidebar-text">AI Advisor</span>
+                    </a>
+
+                    <div class="pt-4 pb-1">
                         <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">Data</p>
                     </div>
                     <a href="{{ route('mahasiswa.biodata.index') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/biodata*') ? 'active' : '' }}">
@@ -456,15 +597,22 @@
             </aside>
 
             <!-- Main Content -->
-            <div class="flex-1 ml-0 md:ml-64 transition-all duration-300 min-w-0" :class="{ 'ml-0 md:ml-64': sidebarOpen, 'ml-0 md:ml-20': !sidebarOpen }">
+            <div class="flex-1 transition-all duration-300 min-w-0">
                 <!-- Top Header -->
-                <header class="h-16 flex items-center justify-between px-8 sticky top-0 z-20" style="background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
-                    <div>
+                <header class="h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-20" style="background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+                    <div class="flex items-center gap-3">
+                        <!-- Mobile Hamburger (not for mahasiswa) -->
+                        @if(Auth::user()->role !== 'mahasiswa')
+                        <button @click="mobileSidebarOpen = true" class="md:hidden p-2 -ml-2 rounded-lg text-siakad-secondary hover:bg-siakad-light/50 transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                        @endif
+
                         @isset($header)
-                        <h1 class="text-lg font-semibold" style="color: var(--text-primary);">{{ $header }}</h1>
+                        <h1 class="text-lg font-semibold truncate max-w-[200px] md:max-w-none" style="color: var(--text-primary);">{{ $header }}</h1>
                         @endisset
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 md:gap-4">
                         @if(in_array(auth()->user()->role, ['mahasiswa', 'dosen', 'admin']))
                         <!-- Dark Mode Toggle -->
                         <button id="darkModeToggle" onclick="toggleDarkMode()" class="p-2 rounded-lg transition-colors hover:bg-siakad-light/50" style="color: var(--text-secondary);" title="Toggle Dark Mode">

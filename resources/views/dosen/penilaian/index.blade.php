@@ -10,14 +10,14 @@
                 <p class="text-sm text-siakad-secondary">Kelola nilai untuk <span id="totalKelas" class="font-semibold text-siakad-primary dark:text-white">{{ $kelasAjar->count() }}</span> kelas</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <!-- Search -->
-            <div class="relative">
-                <input type="text" id="searchInput" placeholder="Cari mata kuliah..." class="input-saas pl-9 pr-4 py-2 text-sm w-56">
+            <div class="relative w-full sm:w-auto">
+                <input type="text" id="searchInput" placeholder="Cari mata kuliah..." class="input-saas pl-9 pr-4 py-2 text-sm w-full sm:w-56">
                 <svg class="w-4 h-4 text-siakad-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <!-- Filter Semester -->
-            <select id="semesterFilter" class="input-saas text-sm py-2">
+            <select id="semesterFilter" class="input-saas text-sm py-2 w-full sm:w-auto">
                 <option value="">Semua Semester</option>
                 @foreach($semesterList as $sem)
                 <option value="{{ $sem }}">Semester {{ $sem }}</option>
