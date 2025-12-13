@@ -16,11 +16,42 @@ class KelasController extends Controller
         $this->akademikService = $akademikService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $kelas = \App\Models\Kelas::with(['mataKuliah', 'dosen', 'jadwal'])->get();
+        $query = \App\Models\Kelas::with(['mataKuliah', 'dosen.user', 'jadwal']);
+
+        // Search
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_kelas', 'like', "%{$search}%")
+                  ->orWhereHas('mataKuliah', fn($q2) => $q2->where('nama_mk', 'like', "%{$search}%")->orWhere('kode_mk', 'like', "%{$search}%"))
+                  ->orWhereHas('dosen.user', fn($q3) => $q3->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Sorting
+        $sortColumn = $request->get('sort', 'nama_kelas');
+        $sortDirection = $request->get('order', 'asc');
+
+        if ($sortColumn === 'mata_kuliah') {
+            $query->join('mata_kuliah', 'kelas.mata_kuliah_id', '=', 'mata_kuliah.id')
+                  ->select('kelas.*')
+                  ->orderBy('mata_kuliah.nama_mk', $sortDirection);
+        } elseif ($sortColumn === 'dosen') {
+            $query->join('dosen', 'kelas.dosen_id', '=', 'dosen.id')
+                  ->join('users', 'dosen.user_id', '=', 'users.id')
+                  ->select('kelas.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif (in_array($sortColumn, ['nama_kelas', 'kapasitas'])) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('nama_kelas', 'asc');
+        }
+
+        $kelas = $query->paginate(config('siakad.pagination', 15))->withQueryString();
         $mataKuliah = $this->akademikService->getAllMataKuliah();
         $dosen = \App\Models\Dosen::with('user')->get();
+        
         return view('admin.kelas.index', compact('kelas', 'mataKuliah', 'dosen'));
     }
 

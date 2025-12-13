@@ -103,7 +103,7 @@
     }" class="pb-20" x-init="$watch('search', () => resetPage()); $watch('filter', () => resetPage()); $watch('sortOrder', () => resetPage())">
 
         <!-- Search & Filter Section (Full Width) -->
-        <div class="sticky top-0 z-30 backdrop-blur-md py-4 mb-8 transition-all duration-200">
+        <div class="py-4 mb-8 transition-all duration-200">
             <div class="card-saas p-2 flex flex-col md:flex-row gap-2">
                 <!-- Search (Full Width) -->
                 <div class="relative flex-1">
@@ -117,38 +117,46 @@
                 </div>
                 
                 <!-- Filters, Sort & View Toggle -->
-                <div class="flex items-center gap-2 p-1 bg-siakad-light dark:bg-slate-700 rounded-xl flex-shrink-0">
-                    <button @click="filter = 'all'" 
-                        :class="filter === 'all' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
-                        Semua
-                    </button>
-                    <button @click="filter = 'today'" 
-                        :class="filter === 'today' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
-                        Hari Ini
-                    </button>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-2 p-1 bg-siakad-light dark:bg-slate-700 rounded-xl flex-shrink-0 w-full md:w-auto">
+                    <!-- Filter Buttons -->
+                    <div class="flex w-full md:w-auto gap-1">
+                        <button @click="filter = 'all'" 
+                            :class="filter === 'all' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
+                            class="flex-1 md:flex-none text-center px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap">
+                            Semua
+                        </button>
+                        <button @click="filter = 'today'" 
+                            :class="filter === 'today' ? 'bg-[#234C6A] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'"
+                            class="flex-1 md:flex-none text-center px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap">
+                            Hari Ini
+                        </button>
+                    </div>
                     
-                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                    <div class="hidden md:block w-px h-6 bg-slate-300 mx-1"></div>
                     
-                    <!-- Sort Toggle -->
-                    <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" 
-                        class="p-2 rounded-lg transition-colors text-slate-500 hover:text-[#234C6A] hover:bg-white" 
-                        :title="sortOrder === 'asc' ? 'A-Z' : 'Z-A'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path x-show="sortOrder === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
-                            <path x-show="sortOrder === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"></path>
-                        </svg>
-                    </button>
-                    
-                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
-                    
-                    <button @click="viewMode = 'card'" class="p-2 rounded-lg transition-colors" :class="viewMode === 'card' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    </button>
-                    <button @click="viewMode = 'list'" class="p-2 rounded-lg transition-colors" :class="viewMode === 'list' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
+                    <!-- Controls (Sort & View) -->
+                    <div class="flex flex-1 md:flex-none gap-2 items-center justify-between md:justify-start w-full md:w-auto pt-2 md:pt-0 border-t border-slate-200 dark:border-slate-600 md:border-0 hidden md:flex">
+                        <!-- Sort Toggle -->
+                        <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" 
+                            class="flex-1 md:flex-none p-2 rounded-lg transition-colors text-slate-500 hover:text-[#234C6A] hover:bg-white flex justify-center hidden md:block" 
+                            :title="sortOrder === 'asc' ? 'A-Z' : 'Z-A'">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path x-show="sortOrder === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+                                <path x-show="sortOrder === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                        
+                        <div class="flex flex-1 md:flex-none gap-1">
+                            <button @click="viewMode = 'card'" class="flex-1 md:flex-none p-2 rounded-lg transition-colors flex justify-center" :class="viewMode === 'card' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            </button>
+                            <button @click="viewMode = 'list'" class="flex-1 md:flex-none p-2 rounded-lg transition-colors flex justify-center" :class="viewMode === 'list' ? 'bg-white shadow text-[#234C6A]' : 'text-slate-400 hover:text-slate-600'">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

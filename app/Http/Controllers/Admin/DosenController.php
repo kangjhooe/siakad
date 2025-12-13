@@ -29,7 +29,23 @@ class DosenController extends Controller
             $query->where('prodi_id', $prodiId);
         }
 
-        $dosen = $query->orderBy('nidn')->paginate(config('siakad.pagination', 15));
+        // Sorting
+        $sortColumn = $request->get('sort', 'nidn');
+        $sortDirection = $request->get('order', 'asc');
+
+        if ($sortColumn === 'name') {
+            $query->join('users', 'dosen.user_id', '=', 'users.id')
+                  ->select('dosen.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif ($sortColumn === 'prodi') {
+             $query->join('prodi', 'dosen.prodi_id', '=', 'prodi.id')
+                   ->select('dosen.*')
+                   ->orderBy('prodi.nama', $sortDirection);
+        } else {
+             $query->orderBy('nidn', $sortDirection);
+        }
+
+        $dosen = $query->paginate(config('siakad.pagination', 15))->withQueryString();
         $prodiList = Prodi::with('fakultas')->get();
 
         return view('admin.dosen.index', compact('dosen', 'prodiList'));

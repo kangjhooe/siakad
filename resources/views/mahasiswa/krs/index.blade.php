@@ -1,17 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        Kartu Rencana Studi (KRS)
+        <span class="md:hidden">KRS</span>
+        <span class="hidden md:inline">Kartu Rencana Studi (KRS)</span>
     </x-slot>
 
     <!-- Status Banner -->
     <div class="mb-8">
         <div class="bg-siakad-primary rounded-xl p-6 text-white">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
-                    <p class="text-xs opacity-70 uppercase tracking-wider">Tahun Akademik Aktif</p>
+                    <p class="text-[10px] md:text-xs opacity-70 uppercase tracking-wider">Tahun Akademik Aktif</p>
                     <h3 class="text-xl font-bold mt-1">{{ \App\Models\TahunAkademik::where('is_active', true)->first()?->tahun ?? '-' }} - {{ \App\Models\TahunAkademik::where('is_active', true)->first()?->semester ?? '-' }}</h3>
                 </div>
-                <div class="flex items-center gap-6">
+                <div class="flex items-center justify-between md:justify-end gap-6 border-t border-white/10 pt-4 md:border-0 md:pt-0">
                     <div class="text-center">
                         <p class="text-2xl font-bold">{{ $krs->krsDetail->sum(fn($d) => $d->kelas->mataKuliah->sks) }}</p>
                         <p class="text-xs opacity-70">Total SKS</p>

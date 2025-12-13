@@ -14,10 +14,11 @@
     @else
     
     <!-- Search Bar -->
+    <!-- Search Bar -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <p class="text-sm text-siakad-secondary">Total <span class="font-semibold text-[#234C6A]">{{ $kelasList->count() }}</span> kelas yang diampu</p>
-        <div class="relative">
-            <input type="text" id="searchInput" placeholder="Cari mata kuliah..." class="input-saas pl-9 pr-4 py-2 text-sm w-56">
+        <div class="relative w-full sm:w-auto">
+            <input type="text" id="searchInput" placeholder="Cari mata kuliah..." class="input-saas pl-9 pr-4 py-2 text-sm w-full sm:w-56">
             <svg class="w-4 h-4 text-siakad-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
     </div>
@@ -27,26 +28,27 @@
     @forelse($kelasGrouped->sortKeys() as $semester => $kelasSemester)
     <div class="mb-4 semester-section" data-semester="{{ $semester }}">
         <!-- Semester Header -->
-        <button type="button" onclick="toggleSemester('semester-{{ $semester }}')" id="btn-semester-{{ $semester }}" class="semester-btn w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group" data-expanded="false">
+        <button type="button" onclick="toggleSemester('semester-{{ $semester }}')" id="btn-semester-{{ $semester }}" class="semester-btn w-full flex items-center justify-between px-4 py-2.5 bg-siakad-dark border border-siakad-dark rounded-lg hover:bg-siakad-primary transition-all duration-300 group shadow-sm z-10 relative" data-expanded="true">
             <div class="flex items-center gap-2.5">
-                <div id="badge-semester-{{ $semester }}" class="w-7 h-7 rounded-md bg-siakad-light dark:bg-gray-700 flex items-center justify-center transition-all duration-300">
-                    <span id="badge-text-semester-{{ $semester }}" class="font-semibold text-xs text-siakad-dark dark:text-white transition-all duration-300">{{ $semester }}</span>
+                <div id="badge-semester-{{ $semester }}" class="w-7 h-7 rounded-md bg-siakad-secondary flex items-center justify-center transition-all duration-300">
+                    <span id="badge-text-semester-{{ $semester }}" class="font-semibold text-xs text-white transition-all duration-300">{{ $semester }}</span>
                 </div>
                 <div class="text-left">
-                    <h3 id="title-semester-{{ $semester }}" class="text-sm font-semibold text-siakad-dark dark:text-white transition-all duration-300">Semester {{ $semester }}</h3>
-                    <p id="subtitle-semester-{{ $semester }}" class="text-[11px] text-siakad-secondary dark:text-gray-400 transition-all duration-300">{{ $kelasSemester->count() }} Mata Kuliah</p>
+                    <h3 id="title-semester-{{ $semester }}" class="text-sm font-semibold text-white transition-all duration-300">Semester {{ $semester }}</h3>
+                    <p id="subtitle-semester-{{ $semester }}" class="text-[11px] text-gray-300 transition-all duration-300">{{ $kelasSemester->count() }} Mata Kuliah</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span id="count-semester-{{ $semester }}" class="text-[10px] font-medium text-siakad-secondary dark:text-gray-300 bg-siakad-light dark:bg-gray-700 px-2 py-0.5 rounded-full transition-all duration-300">{{ $kelasSemester->sum('jumlah_mahasiswa') }} Mahasiswa</span>
-                <svg id="icon-semester-{{ $semester }}" class="w-4 h-4 text-siakad-secondary dark:text-gray-400 transform -rotate-90 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <span id="count-semester-{{ $semester }}" class="text-[10px] font-medium text-white bg-siakad-secondary px-2 py-0.5 rounded-full transition-all duration-300">{{ $kelasSemester->sum('jumlah_mahasiswa') }} Mahasiswa</span>
+                <svg id="icon-semester-{{ $semester }}" class="w-4 h-4 text-white transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
         </button>
         
         <!-- Semester Content (Table) -->
-        <div id="semester-{{ $semester }}" class="semester-content mt-0 overflow-hidden transition-all duration-300" style="max-height: 0px; opacity: 0;">
+        <div id="semester-{{ $semester }}" class="semester-content overflow-hidden transition-all duration-300" style="max-height: 2000px; opacity: 1; margin-top: 0.75rem;">
             <div class="card-saas overflow-hidden mt-3">
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full table-saas">
                         <thead>
                             <tr class="bg-siakad-light/30 dark:bg-gray-900">
@@ -94,6 +96,43 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="md:hidden grid grid-cols-1 gap-4 p-4">
+                    @foreach($kelasSemester as $index => $kelas)
+                    <div class="kelas-row bg-white dark:bg-gray-800 border border-siakad-light rounded-xl p-4 shadow-sm"
+                         data-nama="{{ strtolower($kelas->mataKuliah->nama_mk ?? '') }}"
+                         data-kode="{{ strtolower($kelas->mataKuliah->kode_mk ?? '') }}">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <span class="text-xs font-bold text-siakad-primary bg-siakad-primary/10 px-2 py-1 rounded mb-1 inline-block">{{ $kelas->mataKuliah->kode_mk ?? '-' }}</span>
+                                <h4 class="font-bold text-siakad-dark text-lg">{{ $kelas->mataKuliah->nama_mk ?? 'Mata Kuliah' }}</h4>
+                            </div>
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-siakad-light text-sm font-bold text-siakad-dark">{{ $kelas->nama_kelas }}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+                            <div class="flex items-center gap-2 text-siakad-secondary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <span>{{ $kelas->jumlah_mahasiswa ?? 0 }} Mhs</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-siakad-secondary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                @if($kelas->jadwal && $kelas->jadwal->isNotEmpty())
+                                <span>{{ $kelas->jadwal->first()->hari }}</span>
+                                @else
+                                <span>-</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <a href="{{ route('dosen.presensi.kelas', $kelas) }}" class="flex items-center justify-center gap-2 w-full py-3 bg-siakad-primary text-white font-medium rounded-lg hover:bg-siakad-primary/90 transition">
+                            Kelola Presensi
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>

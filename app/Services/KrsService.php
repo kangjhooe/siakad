@@ -30,46 +30,48 @@ class KrsService
 
     public function addKelas(Krs $krs, $kelasId)
     {
-        if ($krs->status !== 'draft') {
-            throw new Exception('KRS sudah disubmit/final. Tidak bisa ubah.');
-        }
+        return DB::transaction(function () use ($krs, $kelasId) {
+            if ($krs->status !== 'draft') {
+                throw new Exception('KRS sudah disubmit/final. Tidak bisa ubah.');
+            }
 
-        $kelas = Kelas::with('mataKuliah')->findOrFail($kelasId);
-        
-        // 1. Cek Kapasitas
-        $terisi = KrsDetail::where('kelas_id', $kelasId)->count();
-        if ($terisi >= $kelas->kapasitas) {
-            throw new Exception("Kelas penuh! Kapasitas: {$kelas->kapasitas}");
-        }
+            $kelas = Kelas::with('mataKuliah')->findOrFail($kelasId);
+            
+            // 1. Cek Kapasitas
+            $terisi = KrsDetail::where('kelas_id', $kelasId)->count();
+            if ($terisi >= $kelas->kapasitas) {
+                throw new Exception("Kelas penuh! Kapasitas: {$kelas->kapasitas}");
+            }
 
-        // 2. Cek apakah mata kuliah sudah diambil di KRS ini (beda kelas)
-        $mkTaken = $krs->krsDetail()->whereHas('kelas', function($q) use ($kelas) {
-            $q->where('mata_kuliah_id', $kelas->mata_kuliah_id);
-        })->exists();
+            // 2. Cek apakah mata kuliah sudah diambil di KRS ini (beda kelas)
+            $mkTaken = $krs->krsDetail()->whereHas('kelas', function($q) use ($kelas) {
+                $q->where('mata_kuliah_id', $kelas->mata_kuliah_id);
+            })->exists();
 
-        if ($mkTaken) {
-            throw new Exception("Mata kuliah {$kelas->mataKuliah->nama_mk} sudah diambil.");
-        }
+            if ($mkTaken) {
+                throw new Exception("Mata kuliah {$kelas->mataKuliah->nama_mk} sudah diambil.");
+            }
 
-        // 3. Cek Batas SKS
-        $sksSaatIni = $krs->krsDetail->sum(fn($detail) => $detail->kelas->mataKuliah->sks);
-        $sksBaru = $kelas->mataKuliah->sks;
-        
-        // Hitung jatah SKS (Logic IPS Semester Lalu)
-        // Untuk sederhananya kita ambil default atau logic real
-        // Disini kita ambil max sks dari config 'default' dulu jika IPS tidak ada
-        // TODO: Implement calculation based on IPS logic
-        $maxSks = config('siakad.maks_sks.default', 24); 
+            // 3. Cek Batas SKS
+            $sksSaatIni = $krs->krsDetail->sum(fn($detail) => $detail->kelas->mataKuliah->sks);
+            $sksBaru = $kelas->mataKuliah->sks;
+            
+            // Hitung jatah SKS (Logic IPS Semester Lalu)
+            // Untuk sederhananya kita ambil default atau logic real
+            // Disini kita ambil max sks dari config 'default' dulu jika IPS tidak ada
+            // TODO: Implement calculation based on IPS logic
+            $maxSks = config('siakad.maks_sks.default', 24); 
 
-        if (($sksSaatIni + $sksBaru) > $maxSks) {
-            throw new Exception("Melebihi batas SKS ({$maxSks}). Total SKS akan menjadi: " . ($sksSaatIni + $sksBaru));
-        }
+            if (($sksSaatIni + $sksBaru) > $maxSks) {
+                throw new Exception("Melebihi batas SKS ({$maxSks}). Total SKS akan menjadi: " . ($sksSaatIni + $sksBaru));
+            }
 
-        // Add
-        return KrsDetail::create([
-            'krs_id' => $krs->id,
-            'kelas_id' => $kelasId
-        ]);
+            // Add
+            return KrsDetail::create([
+                'krs_id' => $krs->id,
+                'kelas_id' => $kelasId
+            ]);
+        });
     }
 
     public function removeKelas(Krs $krs, $detailId)

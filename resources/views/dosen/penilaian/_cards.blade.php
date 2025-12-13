@@ -1,24 +1,24 @@
 @forelse($kelasGrouped as $semester => $kelasList)
 <div class="mb-3">
-    <!-- Semester Header - Default collapsed (light) -->
-    <button type="button" onclick="toggleSemester('semester-{{ $semester }}')" id="btn-semester-{{ $semester }}" class="semester-btn w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group" data-expanded="false">
+    <!-- Semester Header - Default collapsed -->
+    <button type="button" onclick="toggleSemester('semester-{{ $semester }}')" id="btn-semester-{{ $semester }}" class="semester-btn w-full flex items-center justify-between px-4 py-2.5 bg-siakad-dark border border-siakad-dark rounded-lg hover:bg-siakad-primary transition-all duration-300 group shadow-sm z-10 relative" data-expanded="true">
         <div class="flex items-center gap-2.5">
-            <div id="badge-semester-{{ $semester }}" class="w-7 h-7 rounded-md bg-siakad-light dark:bg-gray-700 flex items-center justify-center transition-all duration-300">
-                <span id="badge-text-semester-{{ $semester }}" class="font-semibold text-xs text-siakad-dark dark:text-gray-200 transition-all duration-300">{{ $semester }}</span>
+            <div id="badge-semester-{{ $semester }}" class="w-7 h-7 rounded-md bg-siakad-secondary flex items-center justify-center transition-all duration-300">
+                <span id="badge-text-semester-{{ $semester }}" class="font-semibold text-xs text-white transition-all duration-300">{{ $semester }}</span>
             </div>
             <div class="text-left">
-                <h3 id="title-semester-{{ $semester }}" class="text-sm font-semibold text-siakad-dark dark:text-white transition-all duration-300">Semester {{ $semester }}</h3>
-                <p id="subtitle-semester-{{ $semester }}" class="text-[11px] text-siakad-secondary dark:text-gray-400 transition-all duration-300">{{ $kelasList->count() }} Mata Kuliah</p>
+                <h3 id="title-semester-{{ $semester }}" class="text-sm font-semibold text-white transition-all duration-300">Semester {{ $semester }}</h3>
+                <p id="subtitle-semester-{{ $semester }}" class="text-[11px] text-gray-300 transition-all duration-300">{{ $kelasList->count() }} Mata Kuliah</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <span id="count-semester-{{ $semester }}" class="text-[10px] font-medium text-siakad-secondary dark:text-gray-300 bg-siakad-light dark:bg-gray-700 px-2 py-0.5 rounded-full transition-all duration-300">{{ $kelasList->sum(fn($k) => $k->krsDetail->count()) }} Mahasiswa</span>
-            <svg id="icon-semester-{{ $semester }}" class="w-4 h-4 text-siakad-secondary dark:text-gray-400 transform -rotate-90 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <span id="count-semester-{{ $semester }}" class="text-[10px] font-medium text-white bg-siakad-secondary px-2 py-0.5 rounded-full transition-all duration-300">{{ $kelasList->sum(fn($k) => $k->krsDetail->count()) }} Mahasiswa</span>
+            <svg id="icon-semester-{{ $semester }}" class="w-4 h-4 text-white transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
     </button>
     
-    <!-- Semester Content (Collapsible) - Default collapsed -->
-    <div id="semester-{{ $semester }}" class="semester-content mt-0 overflow-hidden transition-all duration-300" style="max-height: 0px; opacity: 0;">
+    <!-- Semester Content (Collapsible) - Default expanded -->
+    <div id="semester-{{ $semester }}" class="semester-content overflow-hidden transition-all duration-300" style="max-height: 2000px; opacity: 1; margin-top: 0.75rem;">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-3">
             @foreach($kelasList as $kelas)
             <a href="{{ route('dosen.penilaian.show', $kelas->id) }}" class="card-saas group hover:ring-2 hover:ring-siakad-primary transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">

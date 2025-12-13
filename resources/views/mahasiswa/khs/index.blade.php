@@ -4,8 +4,8 @@
     </x-slot>
 
     <div class="mb-8">
-        <h1 class="text-xl font-semibold text-siakad-dark">Kartu Hasil Studi</h1>
-        <p class="text-siakad-secondary mt-1">Lihat nilai per semester</p>
+        <h1 class="text-xl font-semibold text-siakad-dark hidden md:block">Kartu Hasil Studi</h1>
+        <p class="text-siakad-secondary mt-1 hidden md:block">Lihat nilai per semester</p>
     </div>
 
     <!-- IPK Summary Card -->

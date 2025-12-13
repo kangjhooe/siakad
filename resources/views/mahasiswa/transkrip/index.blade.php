@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <span>Transkrip Nilai</span>
-            <a href="{{ route('mahasiswa.export.transkrip') }}" target="_blank" class="ml-4 px-4 py-2 bg-siakad-primary text-white text-sm font-semibold rounded-lg hover:bg-siakad-dark transition flex items-center gap-2">
+            <a href="{{ route('mahasiswa.export.transkrip') }}" target="_blank" class="hidden md:flex ml-4 px-4 py-2 bg-siakad-primary text-white text-sm font-semibold rounded-lg hover:bg-siakad-dark transition items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2-4h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm9-2V3a1 1 0 00-1-1H6a1 1 0 00-1 1v10m3-4h8a2 2 0 012 2v4H9v-4a2 2 0 012-2z"></path></svg>
                 Cetak PDF
             </a>
@@ -14,7 +14,15 @@
         $totalSks = collect($transcript['semesters'] ?? [])->sum('total_sks');
         $ipk = $ipsHistory->last()['ips'] ?? 0;
     @endphp
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+    <!-- Mobile Download Button -->
+    <div class="mb-6 md:hidden">
+        <a href="{{ route('mahasiswa.export.transkrip') }}" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-siakad-primary text-white font-semibold rounded-xl shadow-lg active:scale-95 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2-4h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm9-2V3a1 1 0 00-1-1H6a1 1 0 00-1 1v10m3-4h8a2 2 0 012 2v4H9v-4a2 2 0 012-2z"></path></svg>
+            Unduh Transkrip PDF
+        </a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
         <div class="card-saas p-5">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-siakad-primary rounded-xl flex items-center justify-center">

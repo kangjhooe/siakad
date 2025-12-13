@@ -17,12 +17,12 @@
             elseif ($hour < 18) { $emoji = '🌤️'; }
             else { $emoji = '🌙'; }
         @endphp
-        <h1 class="text-2xl font-semibold text-siakad-dark">{{ $greeting }}, {{ explode(' ', $dosen->user->name)[0] }}! {{ $emoji }}</h1>
-        <p class="text-siakad-secondary text-sm mt-1">Berikut ringkasan aktivitas mengajar Anda</p>
+        <h1 class="text-2xl font-semibold text-siakad-dark hidden md:block">{{ $greeting }}, {{ explode(' ', $dosen->user->name)[0] }}! {{ $emoji }}</h1>
+        <p class="text-siakad-secondary text-sm mt-1 hidden md:block">Berikut ringkasan aktivitas mengajar Anda</p>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div class="card-saas p-5">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-xl bg-siakad-primary/10 flex items-center justify-center">
@@ -72,48 +72,71 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Jadwal Hari Ini -->
-            <div class="card-saas overflow-hidden">
-                <div class="px-6 py-4 border-b border-siakad-light flex items-center justify-between">
-                    <div>
-                        <h3 class="font-semibold text-siakad-dark">Jadwal Hari Ini</h3>
-                        <p class="text-sm text-siakad-secondary">{{ $hariIni }}, {{ now()->format('d M Y') }}</p>
-                    </div>
-                    <a href="{{ route('dosen.presensi.index') }}" class="text-sm text-siakad-primary hover:underline">Lihat Semua</a>
-                </div>
-                
-                @if($kelasHariIni->isEmpty())
-                <div class="p-8 text-center">
-                    <div class="w-16 h-16 rounded-full bg-siakad-light/50 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                    </div>
-                    <p class="text-siakad-secondary">Tidak ada jadwal mengajar hari ini</p>
-                </div>
-                @else
-                <div class="divide-y divide-siakad-light">
-                    @foreach($kelasHariIni as $kelas)
-                    @php $jadwal = $kelas->jadwal->firstWhere('hari', $hariIni); @endphp
-                    <div class="p-4 flex items-center gap-4 hover:bg-siakad-light/30 transition">
-                        <div class="text-center w-20">
-                            <p class="text-lg font-bold text-siakad-primary">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }}</p>
-                            <p class="text-xs text-siakad-secondary">{{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}</p>
+            <!-- Jadwal Hari Ini (Context Aware Hero Card) -->
+            @if($kelasHariIni->isNotEmpty())
+                @php 
+                    // Get the very first class of the day (assuming sorted by time)
+                    $upcomingClass = $kelasHariIni->first();
+                    $jadwal = $upcomingClass->jadwal->firstWhere('hari', $hariIni);
+                @endphp
+                <div class="card-saas p-6 border-l-4 border-l-siakad-primary bg-gradient-to-r from-white to-siakad-light/30 dark:from-gray-800 dark:to-gray-800/50">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-1 rounded bg-siakad-primary text-white text-xs font-bold uppercase tracking-wide">Kelas Hari Ini</span>
+                                <span class="text-sm font-semibold text-siakad-primary">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}</span>
+                            </div>
+                            <h2 class="text-2xl font-bold text-siakad-dark dark:text-white mb-1">{{ $upcomingClass->mataKuliah->nama_mk }}</h2>
+                            <p class="text-siakad-secondary dark:text-gray-300">Kelas {{ $upcomingClass->nama_kelas }} • {{ $upcomingClass->krsDetail->count() }} Mahasiswa • Ruang {{ $jadwal->ruangan ?? '-' }}</p>
                         </div>
-                        <div class="w-1 h-12 bg-siakad-primary/30 rounded-full"></div>
-                        <div class="flex-1">
-                            <h4 class="font-medium text-siakad-dark">{{ $kelas->mataKuliah->nama_mk }}</h4>
-                            <p class="text-sm text-siakad-secondary">Kelas {{ $kelas->nama_kelas }} • {{ $kelas->krsDetail->count() }} Mahasiswa</p>
-                        </div>
-                        @if($jadwal->ruangan)
-                        <span class="text-xs bg-siakad-primary/10 text-siakad-primary px-2 py-1 rounded">{{ $jadwal->ruangan }}</span>
-                        @endif
-                        <a href="{{ route('dosen.presensi.kelas', $kelas) }}" class="p-2 text-siakad-primary hover:bg-siakad-primary/10 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <a href="{{ route('dosen.presensi.kelas', $upcomingClass) }}" class="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-4 bg-siakad-primary text-white text-lg font-bold rounded-xl shadow-lg hover:bg-siakad-primary/90 hover:scale-105 transition transform w-full md:w-auto">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            Buka Presensi
                         </a>
                     </div>
-                    @endforeach
+                </div>
+
+                <!-- List of other classes if any -->
+                @if($kelasHariIni->count() > 1)
+                <div class="card-saas overflow-hidden mt-6">
+                    <div class="px-6 py-4 border-b border-siakad-light flex items-center justify-between">
+                         <h3 class="font-semibold text-siakad-dark">Jadwal Lainnya Hari Ini</h3>
+                    </div>
+                    <div class="divide-y divide-siakad-light">
+                        @foreach($kelasHariIni->skip(1) as $kelas)
+                        @php $jadwal = $kelas->jadwal->firstWhere('hari', $hariIni); @endphp
+                        <div class="p-4 flex flex-row items-center gap-4 hover:bg-siakad-light/30 transition">
+                            <div class="flex flex-col items-center justify-center bg-siakad-light/30 p-2 rounded w-16 h-16 flex-shrink-0">
+                                <p class="text-sm font-bold text-siakad-primary mb-0.5">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }}</p>
+                                <p class="text-[10px] text-siakad-secondary leading-none">{{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}</p>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-siakad-dark truncate">{{ $kelas->mataKuliah->nama_mk }}</h4>
+                                <div class="flex items-center gap-2 text-xs text-siakad-secondary mt-0.5">
+                                    <span class="font-medium bg-siakad-light px-1.5 py-0.5 rounded text-siakad-dark">{{ $kelas->nama_kelas }}</span>
+                                    <span>•</span>
+                                    <span>{{ $kelas->krsDetail->count() }} Mhs</span>
+                                </div>
+                            </div>
+                            <a href="{{ route('dosen.presensi.kelas', $kelas) }}" class="p-2 bg-siakad-light/50 text-siakad-primary hover:bg-siakad-primary/10 rounded-lg group" title="Buka Presensi">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
                 @endif
+            @else
+            <!-- Empty State for Today -->
+            <div class="card-saas p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
+                <div class="w-16 h-16 rounded-full bg-siakad-light/50 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-siakad-dark mb-1">Tidak Ada Jadwal Hari Ini</h3>
+                <p class="text-siakad-secondary text-sm">Nikmati hari Anda, Pak/Bu Dosen! ☕</p>
+                <a href="{{ route('dosen.presensi.index') }}" class="mt-4 text-siakad-primary hover:underline text-sm font-medium">Lihat Semua Jadwal</a>
             </div>
+            @endif
         </div>
 
         <!-- Sidebar -->

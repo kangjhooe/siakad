@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Nilai;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class PenilaianService
@@ -37,12 +38,18 @@ class PenilaianService
         // Fallback default E
         return ['huruf' => 'E', 'bobot' => 0];
     }
+
     public function bulkInputNilai($kelasId, array $dataNilai)
     {
-        foreach ($dataNilai as $mahasiswaId => $nilaiAngka) {
-            if (is_null($nilaiAngka)) continue;
-            
-            $this->inputNilai($mahasiswaId, $kelasId, $nilaiAngka);
-        }
+        return DB::transaction(function () use ($kelasId, $dataNilai) {
+            $updated = 0;
+            foreach ($dataNilai as $mahasiswaId => $nilaiAngka) {
+                if (is_null($nilaiAngka)) continue;
+                
+                $this->inputNilai($mahasiswaId, $kelasId, $nilaiAngka);
+                $updated++;
+            }
+            return $updated;
+        });
     }
 }

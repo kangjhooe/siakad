@@ -17,11 +17,17 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if (!Auth::check()) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+            return redirect()->route('login');
         }
 
         if (Auth::user()->role !== $role) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);

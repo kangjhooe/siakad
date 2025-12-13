@@ -102,22 +102,20 @@
                 <h2 class="text-2xl font-bold text-siakad-dark mb-4">{{ $featuredClass->kelas->mataKuliah->nama_mk ?? '-' }}</h2>
                 
                 <!-- Teaching Context Row -->
-                <div class="flex flex-wrap items-center gap-4 py-3 px-4 bg-siakad-light/30 dark:bg-gray-700/50 rounded-lg mb-4 text-sm">
+                <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-4 py-3 px-4 bg-siakad-light/30 dark:bg-gray-700/50 rounded-lg mb-4 text-sm">
                     <div class="flex items-center gap-2 text-siakad-dark dark:text-white">
                         <svg class="w-4 h-4 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         <span>Kelas {{ $featuredClass->kelas->nama_kelas }}</span>
                     </div>
+                    <div class="hidden sm:block w-px h-4 bg-siakad-secondary/30"></div>
                     <div class="flex items-center gap-2 text-siakad-dark dark:text-white">
                         <svg class="w-4 h-4 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         <span>{{ $featuredClass->ruangan ?? 'Ruang TBA' }}</span>
                     </div>
+                    <div class="hidden sm:block w-px h-4 bg-siakad-secondary/30"></div>
                     <div class="flex items-center gap-2 text-siakad-dark dark:text-white">
                         <svg class="w-4 h-4 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         <span>{{ $featuredClass->kelas->krsDetail()->count() }} Mahasiswa</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-siakad-dark dark:text-white">
-                        <svg class="w-4 h-4 text-siakad-secondary dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        <span>{{ $featuredClass->kelas->mataKuliah->sks ?? 0 }} SKS</span>
                     </div>
                 </div>
                 
@@ -245,11 +243,12 @@
                 $isNext = !$isDone && !$isOngoing && $jadwal->id === ($nextClass?->id ?? null);
                 $isAbsenJadwal = in_array($jadwal->id, $kehadiranHariIni);
             @endphp
-            <div class="flex items-center gap-4 px-5 py-4 {{ $isOngoing ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : '' }} hover:bg-siakad-light/20 dark:hover:bg-gray-700/30 transition">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 {{ $isOngoing ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : '' }} hover:bg-siakad-light/20 dark:hover:bg-gray-700/30 transition">
                 <!-- Time -->
-                <div class="w-16 flex-shrink-0 text-center">
+                <div class="flex items-center sm:block gap-2 sm:w-16 flex-shrink-0 text-left sm:text-center">
                     <p class="text-base font-bold {{ $isOngoing ? 'text-emerald-600 dark:text-emerald-400' : 'text-siakad-dark dark:text-white' }}">{{ $jadwalStartTime }}</p>
-                    <p class="text-xs text-siakad-secondary dark:text-gray-400">{{ $jadwalEndTime }}</p>
+                    <span class="sm:hidden text-siakad-secondary">-</span>
+                    <p class="text-xs sm:text-xs text-siakad-secondary dark:text-gray-400">{{ $jadwalEndTime }}</p>
                 </div>
                 
                 <!-- Info -->
@@ -258,28 +257,31 @@
                     <p class="text-xs text-siakad-secondary">Kelas {{ $jadwal->kelas->nama_kelas }} • {{ $jadwal->ruangan ?? '-' }}</p>
                 </div>
                 
-                <!-- Status -->
-                <div class="flex-shrink-0">
-                    @if($isDone)
-                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-siakad-light text-siakad-secondary">Selesai</span>
-                    @elseif($isOngoing)
-                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">● Berlangsung</span>
-                    @else
-                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-siakad-light text-siakad-primary">Mendatang</span>
-                    @endif
-                </div>
-                
-                <!-- Action -->
-                <div class="flex-shrink-0 w-24 text-right">
-                    @if($isAbsenJadwal)
-                        <span class="text-xs font-medium text-emerald-600">✓ Sudah Absen</span>
-                    @elseif($isOngoing || $isNext)
-                        <button onclick="showModal({{ $jadwal->id }}, '{{ $jadwal->kelas->mataKuliah->nama_mk }}')" class="px-3 py-1.5 bg-siakad-primary text-white rounded-lg text-xs font-medium hover:bg-siakad-primary/90 transition min-h-[36px]">
-                            Absen
-                        </button>
-                    @else
-                        <span class="text-xs text-siakad-secondary">-</span>
-                    @endif
+                <!-- Status & Action Flex Container -->
+                <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                    <!-- Status -->
+                    <div class="flex-shrink-0">
+                        @if($isDone)
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-siakad-light text-siakad-secondary">Selesai</span>
+                        @elseif($isOngoing)
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">● Berlangsung</span>
+                        @else
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-siakad-light text-siakad-primary">Mendatang</span>
+                        @endif
+                    </div>
+                    
+                    <!-- Action -->
+                    <div class="flex-shrink-0 text-right">
+                        @if($isAbsenJadwal)
+                            <span class="text-xs font-medium text-emerald-600">✓ Sudah Absen</span>
+                        @elseif($isOngoing || $isNext)
+                            <button onclick="showModal({{ $jadwal->id }}, '{{ $jadwal->kelas->mataKuliah->nama_mk }}')" class="px-4 py-2 bg-siakad-primary text-white rounded-lg text-xs font-bold hover:bg-siakad-primary/90 transition shadow-sm w-full sm:w-auto">
+                                Absen
+                            </button>
+                        @else
+                            <span class="text-xs text-siakad-secondary">-</span>
+                        @endif
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -296,28 +298,30 @@
         <div class="px-5 py-4 border-b border-siakad-light">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <h3 class="font-semibold text-siakad-dark dark:text-white">Riwayat Kehadiran</h3>
-                <form method="GET" class="flex flex-wrap items-center gap-2">
-                    <div class="relative flex-1 lg:flex-none lg:w-48">
+                <form method="GET" class="flex flex-col md:flex-row md:items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full lg:w-48">
                         <input type="text" name="search" placeholder="Cari mata kuliah..." class="input-saas w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-gray-900 border-siakad-light dark:border-gray-700 text-siakad-dark dark:text-white" value="{{ request('search') }}">
                         <svg class="w-4 h-4 text-siakad-secondary dark:text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <label class="text-xs text-siakad-secondary dark:text-gray-400">Periode:</label>
-                    <select name="month" class="input-saas text-sm py-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
-                        @for($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->locale('id')->monthName }}</option>
-                        @endfor
-                    </select>
-                    <select name="year" class="input-saas text-sm py-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
-                        @for($y = now()->year; $y >= now()->year - 2; $y--)
-                        <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endfor
-                    </select>
-                    <button type="submit" class="px-4 py-2 bg-siakad-primary text-white rounded-lg text-sm font-medium hover:bg-siakad-primary/90 transition min-h-[40px]">Terapkan</button>
+                    <div class="flex gap-2 w-full lg:w-auto">
+                        <select name="month" class="input-saas flex-1 text-sm py-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->locale('id')->monthName }}</option>
+                            @endfor
+                        </select>
+                        <select name="year" class="input-saas flex-1 text-sm py-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            @for($y = now()->year; $y >= now()->year - 2; $y--)
+                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full lg:w-auto px-4 py-2 bg-siakad-primary text-white rounded-lg text-sm font-medium hover:bg-siakad-primary/90 transition min-h-[40px]">Terapkan</button>
                 </form>
             </div>
         </div>
         
-        <table class="w-full table-saas">
+        <!-- Desktop Table -->
+        <table class="hidden md:table w-full table-saas">
             <thead>
                 <tr class="bg-siakad-light/30 dark:bg-gray-900">
                     <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase">Tanggal</th>
@@ -341,6 +345,34 @@
                 @endforelse
             </tbody>
         </table>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-siakad-light dark:divide-gray-700">
+            @forelse($riwayat as $r)
+            <div class="p-4 bg-white dark:bg-gray-800">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <span class="text-xs font-medium text-siakad-secondary dark:text-gray-400">{{ $r->tanggal->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</span>
+                        <h4 class="font-bold text-siakad-dark dark:text-white text-sm mt-0.5">{{ $r->jadwalKuliah?->kelas?->mataKuliah?->nama_mk ?? '-' }}</h4>
+                    </div>
+                    <span class="px-2 py-1 text-[10px] font-medium rounded-full bg-{{ $r->status_color }}-100 text-{{ $r->status_color }}-700 dark:bg-gray-800 dark:text-{{ $r->status_color }}-400">{{ $r->status_label }}</span>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-siakad-secondary dark:text-gray-400 bg-siakad-light/30 dark:bg-gray-700/30 p-2 rounded-lg">
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <span>Masuk: <span class="font-semibold text-siakad-dark dark:text-gray-200">{{ $r->jam_masuk ? substr($r->jam_masuk, 0, 5) : '-' }}</span></span>
+                    </div>
+                    <div class="w-px h-3 bg-siakad-light dark:bg-gray-600"></div>
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <span>Keluar: <span class="font-semibold text-siakad-dark dark:text-gray-200">{{ $r->jam_keluar ? substr($r->jam_keluar, 0, 5) : '-' }}</span></span>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="p-8 text-center text-siakad-secondary dark:text-gray-400 text-sm">Belum ada data kehadiran</div>
+            @endforelse
+        </div>
     </div>
 
     <!-- Modal -->

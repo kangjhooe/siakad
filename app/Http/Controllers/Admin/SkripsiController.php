@@ -28,7 +28,31 @@ class SkripsiController extends Controller
             });
         }
 
-        $skripsiList = $query->orderBy('created_at', 'desc')->paginate(20);
+        // Sorting
+        $sortColumn = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('order', 'desc');
+
+        if ($sortColumn === 'mahasiswa_name') {
+            $query->join('mahasiswa', 'skripsi.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->join('users', 'mahasiswa.user_id', '=', 'users.id')
+                  ->select('skripsi.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif ($sortColumn === 'mahasiswa_nim') {
+            $query->join('mahasiswa', 'skripsi.mahasiswa_id', '=', 'mahasiswa.id')
+                  ->select('skripsi.*')
+                  ->orderBy('mahasiswa.nim', $sortDirection);
+        } elseif ($sortColumn === 'pembimbing_name') {
+            $query->leftJoin('dosen', 'skripsi.pembimbing1_id', '=', 'dosen.id')
+                  ->leftJoin('users', 'dosen.user_id', '=', 'users.id')
+                  ->select('skripsi.*')
+                  ->orderBy('users.name', $sortDirection);
+        } elseif (in_array($sortColumn, ['judul', 'status', 'created_at'])) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $skripsiList = $query->paginate(20)->withQueryString();
         $dosenList = Dosen::with('user')->get();
         $statusList = Skripsi::getStatusList();
 
