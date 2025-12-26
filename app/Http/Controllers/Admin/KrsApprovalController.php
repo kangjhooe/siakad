@@ -12,9 +12,14 @@ class KrsApprovalController extends Controller
     {
         $status = $request->get('status', 'pending');
         
-        $krsList = Krs::with(['mahasiswa.user', 'mahasiswa.prodi', 'tahunAkademik', 'krsDetail.kelas.mataKuliah'])
-            ->when($status !== 'all', fn($q) => $q->where('status', $status))
+        $krsList = Krs::with(['mahasiswa.user', 'mahasiswa.prodi.fakultas', 'tahunAkademik', 'krsDetail.kelas.mataKuliah'])
             ->when($status !== 'all', fn($q) => $q->where('status', $status));
+
+        // Faculty scoping for admin_fakultas
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $krsList->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
+        }
 
         // Sorting
         $sortColumn = $request->get('sort', 'updated_at');
@@ -42,15 +47,29 @@ class KrsApprovalController extends Controller
 
         $krsList = $krsList->paginate(config('siakad.pagination', 15))->withQueryString();
 
+        // Status counts - also scoped for admin_fakultas
+        $statusCountsQuery = Krs::query();
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $statusCountsQuery->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
+        }
+        
+        // Optimized: Single query for status counts using groupBy
+        $statusCountsRaw = (clone $statusCountsQuery)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+        
         $statusCounts = [
-            'pending' => Krs::where('status', 'pending')->count(),
-            'approved' => Krs::where('status', 'approved')->count(),
-            'rejected' => Krs::where('status', 'rejected')->count(),
-            'draft' => Krs::where('status', 'draft')->count(),
+            'pending' => $statusCountsRaw->get('pending', 0),
+            'approved' => $statusCountsRaw->get('approved', 0),
+            'rejected' => $statusCountsRaw->get('rejected', 0),
+            'draft' => $statusCountsRaw->get('draft', 0),
         ];
 
         return view('admin.krs-approval.index', compact('krsList', 'status', 'statusCounts'));
     }
+
 
     public function show(Krs $krs)
     {
@@ -87,16 +106,34 @@ class KrsApprovalController extends Controller
 
     public function bulkApprove(Request $request)
     {
-        $ids = $request->input('krs_ids', []);
+        // Validate input
+        $validated = $request->validate([
+            'krs_ids' => 'required|array|min:1',
+            'krs_ids.*' => 'required|integer|exists:krs,id',
+        ], [
+            'krs_ids.required' => 'Pilih minimal satu KRS',
+            'krs_ids.array' => 'Format data tidak valid',
+            'krs_ids.min' => 'Pilih minimal satu KRS',
+            'krs_ids.*.integer' => 'ID KRS tidak valid',
+            'krs_ids.*.exists' => 'KRS tidak ditemukan',
+        ]);
+
+        $ids = $validated['krs_ids'];
+
+        // Build query with fakultas scope for admin_fakultas
+        $query = Krs::whereIn('id', $ids)->where('status', 'pending');
         
-        if (empty($ids)) {
-            return redirect()->back()->with('error', 'Pilih minimal satu KRS');
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $query->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
         }
 
-        Krs::whereIn('id', $ids)
-            ->where('status', 'pending')
-            ->update(['status' => 'approved']);
+        $updatedCount = $query->update(['status' => 'approved']);
 
-        return redirect()->back()->with('success', count($ids) . ' KRS berhasil disetujui');
+        if ($updatedCount === 0) {
+            return redirect()->back()->with('warning', 'Tidak ada KRS yang dapat disetujui (mungkin sudah diproses atau di luar wewenang Anda)');
+        }
+
+        return redirect()->back()->with('success', $updatedCount . ' KRS berhasil disetujui');
     }
 }

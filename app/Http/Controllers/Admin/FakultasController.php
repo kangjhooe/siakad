@@ -15,14 +15,29 @@ class FakultasController extends Controller
         $this->akademikService = $akademikService;
     }
 
+    /**
+     * Check if user is superadmin, abort if not
+     */
+    private function authorizeSuperAdmin(): void
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(response()->view('errors.403', ['message' => 'Hanya superadmin yang dapat mengelola fakultas.'], 403));
+        }
+    }
+
+
     public function index()
     {
+        $this->authorizeSuperAdmin();
+        
         $fakultas = $this->akademikService->getAllFakultas();
         return view('admin.fakultas.index', compact('fakultas'));
     }
 
     public function store(Request $request)
     {
+        $this->authorizeSuperAdmin();
+        
         $validated = $request->validate(['nama' => 'required|string|max:255']);
         $this->akademikService->createFakultas($validated);
         return redirect()->back()->with('success', 'Fakultas berhasil ditambahkan');
@@ -30,6 +45,8 @@ class FakultasController extends Controller
 
     public function update(Request $request, \App\Models\Fakultas $fakultas)
     {
+        $this->authorizeSuperAdmin();
+        
         $validated = $request->validate(['nama' => 'required|string|max:255']);
         $fakultas->update($validated);
         return redirect()->back()->with('success', 'Fakultas berhasil diupdate');
@@ -37,6 +54,8 @@ class FakultasController extends Controller
 
     public function destroy(\App\Models\Fakultas $fakultas)
     {
+        $this->authorizeSuperAdmin();
+        
         $fakultas->delete();
         return redirect()->back()->with('success', 'Fakultas berhasil dihapus');
     }

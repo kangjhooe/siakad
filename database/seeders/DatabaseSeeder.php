@@ -13,6 +13,8 @@ use App\Models\TahunAkademik;
 use App\Models\Krs;
 use App\Models\KrsDetail;
 use App\Models\Nilai;
+use App\Models\JadwalKuliah;
+use App\Models\Ruangan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,269 +22,343 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(RolePermissionSeeder::class);
+
         // ==========================================
-        // ADMIN USER
+        // 1. SUPERADMIN
         // ==========================================
         User::create([
-            'name' => 'Administrator SIAKAD',
-            'email' => 'admin@siakad.com',
+            'name' => 'Super Administrator',
+            'email' => 'superadmin@siakad.test',
             'password' => Hash::make('password'),
-            'role' => 'admin',
+            'role' => 'superadmin',
         ]);
 
         // ==========================================
-        // TAHUN AKADEMIK
+        // 2. TAHUN AKADEMIK
         // ==========================================
-        $ta2023Ganjil = TahunAkademik::create(['tahun' => '2023/2024', 'semester' => 'Ganjil', 'is_active' => false]);
-        $ta2023Genap = TahunAkademik::create(['tahun' => '2023/2024', 'semester' => 'Genap', 'is_active' => false]);
-        $ta2024Ganjil = TahunAkademik::create(['tahun' => '2024/2025', 'semester' => 'Ganjil', 'is_active' => true]);
+        TahunAkademik::create([
+            'tahun' => '2023/2024',
+            'semester' => 'Ganjil',
+            'is_active' => false,
+            'tanggal_mulai' => '2023-09-01',
+            'tanggal_selesai' => '2024-01-31',
+        ]);
+        
+        $taLalu = TahunAkademik::create([
+            'tahun' => '2023/2024',
+            'semester' => 'Genap',
+            'is_active' => false,
+            'tanggal_mulai' => '2024-02-01',
+            'tanggal_selesai' => '2024-06-30',
+        ]);
+        
+        $taAktif = TahunAkademik::create([
+            'tahun' => '2024/2025',
+            'semester' => 'Ganjil',
+            'is_active' => true,
+            'tanggal_mulai' => '2024-09-01',
+            'tanggal_selesai' => '2025-01-31',
+        ]);
 
         // ==========================================
-        // FAKULTAS
+        // 3. FAKULTAS
         // ==========================================
-        $ftek = Fakultas::create(['nama' => 'Fakultas Teknik']);
-        $feb = Fakultas::create(['nama' => 'Fakultas Ekonomi dan Bisnis']);
-        $fmipa = Fakultas::create(['nama' => 'Fakultas Matematika dan IPA']);
+        $fakultas = Fakultas::create(['nama' => 'Fakultas Teknik dan Ilmu Komputer']);
+
+        // Admin Fakultas
+        $adminFakultas = User::create([
+            'name' => 'Admin FTIK',
+            'email' => 'admin.ftik@siakad.test',
+            'password' => Hash::make('password'),
+            'role' => 'admin_fakultas',
+            'fakultas_id' => $fakultas->id,
+        ]);
 
         // ==========================================
-        // PROGRAM STUDI
+        // 4. PROGRAM STUDI
         // ==========================================
-        $ti = Prodi::create(['nama' => 'Teknik Informatika', 'fakultas_id' => $ftek->id]);
-        $si = Prodi::create(['nama' => 'Sistem Informasi', 'fakultas_id' => $ftek->id]);
-        $te = Prodi::create(['nama' => 'Teknik Elektro', 'fakultas_id' => $ftek->id]);
-        $mn = Prodi::create(['nama' => 'Manajemen', 'fakultas_id' => $feb->id]);
-        $ak = Prodi::create(['nama' => 'Akuntansi', 'fakultas_id' => $feb->id]);
-        $mtk = Prodi::create(['nama' => 'Matematika', 'fakultas_id' => $fmipa->id]);
+        $prodi = Prodi::create([
+            'nama' => 'Teknik Informatika',
+            'fakultas_id' => $fakultas->id,
+        ]);
 
         // ==========================================
-        // MATA KULIAH - TEKNIK INFORMATIKA
+        // 5. RUANGAN
         // ==========================================
-        $mkTI = [
-            ['kode_mk' => 'TI101', 'nama_mk' => 'Algoritma dan Pemrograman', 'sks' => 3, 'semester' => 1],
-            ['kode_mk' => 'TI102', 'nama_mk' => 'Struktur Data', 'sks' => 3, 'semester' => 2],
-            ['kode_mk' => 'TI103', 'nama_mk' => 'Basis Data', 'sks' => 3, 'semester' => 3],
-            ['kode_mk' => 'TI104', 'nama_mk' => 'Pemrograman Web', 'sks' => 3, 'semester' => 3],
-            ['kode_mk' => 'TI105', 'nama_mk' => 'Pemrograman Berorientasi Objek', 'sks' => 3, 'semester' => 2],
-            ['kode_mk' => 'TI201', 'nama_mk' => 'Jaringan Komputer', 'sks' => 3, 'semester' => 4],
-            ['kode_mk' => 'TI202', 'nama_mk' => 'Sistem Operasi', 'sks' => 3, 'semester' => 4],
-            ['kode_mk' => 'TI203', 'nama_mk' => 'Rekayasa Perangkat Lunak', 'sks' => 3, 'semester' => 5],
-            ['kode_mk' => 'TI204', 'nama_mk' => 'Kecerdasan Buatan', 'sks' => 3, 'semester' => 5],
-            ['kode_mk' => 'TI205', 'nama_mk' => 'Machine Learning', 'sks' => 3, 'semester' => 6],
-            ['kode_mk' => 'TI301', 'nama_mk' => 'Keamanan Informasi', 'sks' => 3, 'semester' => 6],
-            ['kode_mk' => 'TI302', 'nama_mk' => 'Cloud Computing', 'sks' => 3, 'semester' => 7],
-        ];
-
-        $mkSI = [
-            ['kode_mk' => 'SI101', 'nama_mk' => 'Pengantar Sistem Informasi', 'sks' => 3, 'semester' => 1],
-            ['kode_mk' => 'SI102', 'nama_mk' => 'Analisis dan Desain Sistem', 'sks' => 3, 'semester' => 3],
-            ['kode_mk' => 'SI103', 'nama_mk' => 'Manajemen Proyek TI', 'sks' => 3, 'semester' => 5],
-            ['kode_mk' => 'SI104', 'nama_mk' => 'Enterprise Resource Planning', 'sks' => 3, 'semester' => 5],
-            ['kode_mk' => 'SI105', 'nama_mk' => 'Business Intelligence', 'sks' => 3, 'semester' => 6],
-        ];
-
-        $mkMN = [
-            ['kode_mk' => 'MN101', 'nama_mk' => 'Pengantar Manajemen', 'sks' => 3, 'semester' => 1],
-            ['kode_mk' => 'MN102', 'nama_mk' => 'Manajemen Keuangan', 'sks' => 3, 'semester' => 3],
-            ['kode_mk' => 'MN103', 'nama_mk' => 'Manajemen Pemasaran', 'sks' => 3, 'semester' => 4],
-            ['kode_mk' => 'MN104', 'nama_mk' => 'Manajemen SDM', 'sks' => 3, 'semester' => 5],
-        ];
-
-        foreach ($mkTI as $mk) { MataKuliah::create($mk); }
-        foreach ($mkSI as $mk) { MataKuliah::create($mk); }
-        foreach ($mkMN as $mk) { MataKuliah::create($mk); }
+        $ruangan = Ruangan::create([
+            'kode_ruangan' => 'LC-01',
+            'nama_ruangan' => 'Lab Komputer 1',
+            'kapasitas' => 40,
+            'gedung' => 'Gedung A',
+            'lantai' => 1,
+        ]);
 
         // ==========================================
-        // DOSEN (dengan data realistis Indonesia)
+        // 6. MATA KULIAH - KURIKULUM 8 SEMESTER (144 SKS)
         // ==========================================
-        $dosenData = [
-            ['name' => 'Dr. Ir. Ahmad Fauzi, M.Kom.', 'email' => 'ahmad.fauzi@siakad.com', 'nidn' => '0012056701', 'prodi_id' => $ti->id],
-            ['name' => 'Dr. Budi Santoso, M.T.', 'email' => 'budi.santoso@siakad.com', 'nidn' => '0015077802', 'prodi_id' => $ti->id],
-            ['name' => 'Siti Aminah, S.Kom., M.Cs.', 'email' => 'siti.aminah@siakad.com', 'nidn' => '0020088503', 'prodi_id' => $ti->id],
-            ['name' => 'Drs. Hendra Wijaya, M.M.', 'email' => 'hendra.wijaya@siakad.com', 'nidn' => '0025097604', 'prodi_id' => $si->id],
-            ['name' => 'Prof. Dr. Ratna Dewi, M.Si.', 'email' => 'ratna.dewi@siakad.com', 'nidn' => '0001056505', 'prodi_id' => $si->id],
-            ['name' => 'Dr. Eko Prasetyo, M.B.A.', 'email' => 'eko.prasetyo@siakad.com', 'nidn' => '0008048006', 'prodi_id' => $mn->id],
-        ];
-
-        $dosenModels = [];
-        foreach ($dosenData as $d) {
-            $user = User::create([
-                'name' => $d['name'],
-                'email' => $d['email'],
-                'password' => Hash::make('password'),
-                'role' => 'dosen',
-            ]);
-            $dosenModels[] = Dosen::create([
-                'user_id' => $user->id,
-                'nidn' => $d['nidn'],
-                'prodi_id' => $d['prodi_id'],
-            ]);
+        $kurikulum = $this->getKurikulum($prodi->id);
+        
+        foreach ($kurikulum as $mk) {
+            MataKuliah::create($mk);
         }
 
         // ==========================================
-        // KELAS
+        // 7. DOSEN
         // ==========================================
-        $kelasData = [];
-        $mataKuliahList = MataKuliah::all();
+        $dosenUser = User::create([
+            'name' => 'Dr. Ahmad Fauzi, M.Kom.',
+            'email' => 'dosen@siakad.test',
+            'password' => Hash::make('password'),
+            'role' => 'dosen',
+        ]);
+
+        $dosen = Dosen::create([
+            'user_id' => $dosenUser->id,
+            'nidn' => '0012056701',
+            'prodi_id' => $prodi->id,
+        ]);
+
+        // ==========================================
+        // 8. KELAS (untuk semester 1-2)
+        // ==========================================
+        $mataKuliahSem1 = MataKuliah::where('semester', 1)->get();
+        $mataKuliahSem2 = MataKuliah::where('semester', 2)->get();
         
-        foreach ($mataKuliahList as $index => $mk) {
-            // Assign dosen based on prodi
-            $dosenForProdi = collect($dosenModels)->filter(fn($d) => $d->prodi_id == $mk->prodi_id)->first();
-            if (!$dosenForProdi) {
-                $dosenForProdi = $dosenModels[0]; // fallback
-            }
-            
-            $kelasData[] = Kelas::create([
+        $kelasList = [];
+        $hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        $jamMulai = ['08:00', '10:00', '13:00', '15:00'];
+        
+        $dayIndex = 0;
+        $jamIndex = 0;
+        
+        foreach ($mataKuliahSem1->merge($mataKuliahSem2) as $mk) {
+            $kelas = Kelas::create([
                 'mata_kuliah_id' => $mk->id,
-                'dosen_id' => $dosenForProdi->id,
-                'nama_kelas' => chr(65 + ($index % 3)), // A, B, C
+                'dosen_id' => $dosen->id,
+                'nama_kelas' => 'A',
                 'kapasitas' => 40,
+                'tahun_akademik_id' => $taAktif->id,
             ]);
+            
+            // Create jadwal
+            JadwalKuliah::create([
+                'kelas_id' => $kelas->id,
+                'hari' => $hari[$dayIndex % 5],
+                'jam_mulai' => $jamMulai[$jamIndex % 4],
+                'jam_selesai' => date('H:i', strtotime($jamMulai[$jamIndex % 4]) + 5400), // +1.5 hours
+                'ruangan' => $ruangan->nama_ruangan,
+            ]);
+            
+            $kelasList[] = $kelas;
+            $dayIndex++;
+            $jamIndex++;
         }
 
         // ==========================================
-        // MAHASISWA (dengan data realistis Indonesia)
+        // 9. MAHASISWA (Semester 5 - Angkatan 2022)
         // ==========================================
-        $mahasiswaData = [
-            // Teknik Informatika 2021
-            ['name' => 'Muhammad Rizky Pratama', 'email' => 'rizky.pratama@student.siakad.com', 'nim' => '2021101001', 'prodi_id' => $ti->id, 'angkatan' => 2021],
-            ['name' => 'Dewi Sartika Putri', 'email' => 'dewi.sartika@student.siakad.com', 'nim' => '2021101002', 'prodi_id' => $ti->id, 'angkatan' => 2021],
-            ['name' => 'Andi Wijaya Kusuma', 'email' => 'andi.wijaya@student.siakad.com', 'nim' => '2021101003', 'prodi_id' => $ti->id, 'angkatan' => 2021],
-            ['name' => 'Farah Nabila Zahra', 'email' => 'farah.nabila@student.siakad.com', 'nim' => '2021101004', 'prodi_id' => $ti->id, 'angkatan' => 2021],
-            ['name' => 'Bagus Setiawan', 'email' => 'bagus.setiawan@student.siakad.com', 'nim' => '2021101005', 'prodi_id' => $ti->id, 'angkatan' => 2021],
-            
-            // Teknik Informatika 2022
-            ['name' => 'Cindy Aurelia Putri', 'email' => 'cindy.aurelia@student.siakad.com', 'nim' => '2022101001', 'prodi_id' => $ti->id, 'angkatan' => 2022],
-            ['name' => 'Dimas Ardiansyah', 'email' => 'dimas.ardi@student.siakad.com', 'nim' => '2022101002', 'prodi_id' => $ti->id, 'angkatan' => 2022],
-            ['name' => 'Eka Safitri', 'email' => 'eka.safitri@student.siakad.com', 'nim' => '2022101003', 'prodi_id' => $ti->id, 'angkatan' => 2022],
-            ['name' => 'Farhan Maulana', 'email' => 'farhan.maulana@student.siakad.com', 'nim' => '2022101004', 'prodi_id' => $ti->id, 'angkatan' => 2022],
-            ['name' => 'Gita Permata Sari', 'email' => 'gita.permata@student.siakad.com', 'nim' => '2022101005', 'prodi_id' => $ti->id, 'angkatan' => 2022],
-            
-            // Teknik Informatika 2023
-            ['name' => 'Haikal Ramadhan', 'email' => 'haikal.ramadhan@student.siakad.com', 'nim' => '2023101001', 'prodi_id' => $ti->id, 'angkatan' => 2023],
-            ['name' => 'Indah Permatasari', 'email' => 'indah.permata@student.siakad.com', 'nim' => '2023101002', 'prodi_id' => $ti->id, 'angkatan' => 2023],
-            ['name' => 'Joko Susilo', 'email' => 'joko.susilo@student.siakad.com', 'nim' => '2023101003', 'prodi_id' => $ti->id, 'angkatan' => 2023],
-            ['name' => 'Kartika Dewi', 'email' => 'kartika.dewi@student.siakad.com', 'nim' => '2023101004', 'prodi_id' => $ti->id, 'angkatan' => 2023],
-            ['name' => 'Lukman Hakim', 'email' => 'lukman.hakim@student.siakad.com', 'nim' => '2023101005', 'prodi_id' => $ti->id, 'angkatan' => 2023],
-            
-            // Sistem Informasi 2022
-            ['name' => 'Maya Anggraini', 'email' => 'maya.anggraini@student.siakad.com', 'nim' => '2022102001', 'prodi_id' => $si->id, 'angkatan' => 2022],
-            ['name' => 'Naufal Hidayat', 'email' => 'naufal.hidayat@student.siakad.com', 'nim' => '2022102002', 'prodi_id' => $si->id, 'angkatan' => 2022],
-            ['name' => 'Olivia Rahma', 'email' => 'olivia.rahma@student.siakad.com', 'nim' => '2022102003', 'prodi_id' => $si->id, 'angkatan' => 2022],
-            
-            // Manajemen 2022
-            ['name' => 'Putra Aditya', 'email' => 'putra.aditya@student.siakad.com', 'nim' => '2022201001', 'prodi_id' => $mn->id, 'angkatan' => 2022],
-            ['name' => 'Queen Maharani', 'email' => 'queen.maharani@student.siakad.com', 'nim' => '2022201002', 'prodi_id' => $mn->id, 'angkatan' => 2022],
-        ];
+        $mahasiswaUser = User::create([
+            'name' => 'Budi Santoso',
+            'email' => 'mahasiswa@siakad.test',
+            'password' => Hash::make('password'),
+            'role' => 'mahasiswa',
+        ]);
 
-        $mahasiswaModels = [];
-        foreach ($mahasiswaData as $m) {
-            $user = User::create([
-                'name' => $m['name'],
-                'email' => $m['email'],
-                'password' => Hash::make('password'),
-                'role' => 'mahasiswa',
-            ]);
-            
-            // Assign Dosen PA from same prodi
-            $dosenPa = collect($dosenModels)->filter(fn($d) => $d->prodi_id == $m['prodi_id'])->first();
-            
-            $mahasiswaModels[] = Mahasiswa::create([
-                'user_id' => $user->id,
-                'nim' => $m['nim'],
-                'prodi_id' => $m['prodi_id'],
-                'dosen_pa_id' => $dosenPa?->id,
-                'angkatan' => $m['angkatan'],
-                'status' => 'aktif',
-            ]);
-        }
+        $mahasiswa = Mahasiswa::create([
+            'user_id' => $mahasiswaUser->id,
+            'nim' => '2022101001',
+            'prodi_id' => $prodi->id,
+            'angkatan' => 2022,
+            'dosen_pa_id' => $dosen->id,
+            'status' => 'aktif',
+        ]);
 
         // ==========================================
-        // KRS & NILAI (Sample untuk beberapa mahasiswa)
+        // 10. RIWAYAT AKADEMIK (4 Semester Selesai)
         // ==========================================
-        $allKelas = Kelas::all();
         
-        // KRS untuk mahasiswa TI angkatan 2021 dan 2022 (sudah approved, ada nilai)
-        $approvedMahasiswa = collect($mahasiswaModels)->filter(fn($m) => 
-            $m->prodi_id == $ti->id && in_array($m->angkatan, [2021, 2022])
-        );
-
-        foreach ($approvedMahasiswa as $mhs) {
-            // Semester lalu (2023/2024 Genap) - sudah ada nilai
-            $krs = Krs::create([
-                'mahasiswa_id' => $mhs->id,
-                'tahun_akademik_id' => $ta2023Genap->id,
-                'status' => 'approved',
-            ]);
-
-            // Ambil 5 mata kuliah
-            $selectedKelas = $allKelas->take(5);
-            foreach ($selectedKelas as $kelas) {
-                KrsDetail::create([
-                    'krs_id' => $krs->id,
-                    'kelas_id' => $kelas->id,
-                ]);
-
-                // Generate nilai realistis
-                $nilaiAngka = $this->generateRealisticGrade($mhs->angkatan);
-                Nilai::create([
-                    'mahasiswa_id' => $mhs->id,
-                    'kelas_id' => $kelas->id,
-                    'nilai_angka' => $nilaiAngka,
-                    'nilai_huruf' => $this->convertToLetter($nilaiAngka),
-                ]);
+        // Buat tahun akademik untuk semester 1-4
+        $ta2022Ganjil = TahunAkademik::create([
+            'tahun' => '2022/2023', 'semester' => 'Ganjil', 'is_active' => false,
+            'tanggal_mulai' => '2022-09-01', 'tanggal_selesai' => '2023-01-31',
+        ]);
+        $ta2022Genap = TahunAkademik::create([
+            'tahun' => '2022/2023', 'semester' => 'Genap', 'is_active' => false,
+            'tanggal_mulai' => '2023-02-01', 'tanggal_selesai' => '2023-06-30',
+        ]);
+        
+        // Semester 1 (20 SKS - 7 MK)
+        $krs1 = Krs::create(['mahasiswa_id' => $mahasiswa->id, 'tahun_akademik_id' => $ta2022Ganjil->id, 'status' => 'approved']);
+        foreach (MataKuliah::where('semester', 1)->get() as $mk) {
+            $kelas = Kelas::where('mata_kuliah_id', $mk->id)->first();
+            if ($kelas) {
+                KrsDetail::create(['krs_id' => $krs1->id, 'kelas_id' => $kelas->id]);
+                $nilaiAngka = rand(75, 92);
+                Nilai::create(['mahasiswa_id' => $mahasiswa->id, 'kelas_id' => $kelas->id, 'nilai_angka' => $nilaiAngka, 'nilai_huruf' => $this->convertToLetter($nilaiAngka)]);
             }
         }
 
-        // KRS untuk mahasiswa TI angkatan 2023 (pending/draft)
-        $pendingMahasiswa = collect($mahasiswaModels)->filter(fn($m) => 
-            $m->prodi_id == $ti->id && $m->angkatan == 2023
-        );
-
-        foreach ($pendingMahasiswa as $mhs) {
-            $krs = Krs::create([
-                'mahasiswa_id' => $mhs->id,
-                'tahun_akademik_id' => $ta2024Ganjil->id,
-                'status' => 'pending', // Menunggu approval dari Dosen PA
-            ]);
-
-            // Ambil 6 mata kuliah
-            $selectedKelas = $allKelas->take(6);
-            foreach ($selectedKelas as $kelas) {
-                KrsDetail::create([
-                    'krs_id' => $krs->id,
-                    'kelas_id' => $kelas->id,
-                ]);
+        // Semester 2 (20 SKS - 7 MK)
+        $krs2 = Krs::create(['mahasiswa_id' => $mahasiswa->id, 'tahun_akademik_id' => $ta2022Genap->id, 'status' => 'approved']);
+        foreach (MataKuliah::where('semester', 2)->get() as $mk) {
+            $kelas = Kelas::where('mata_kuliah_id', $mk->id)->first();
+            if ($kelas) {
+                KrsDetail::create(['krs_id' => $krs2->id, 'kelas_id' => $kelas->id]);
+                $nilaiAngka = rand(73, 90);
+                Nilai::create(['mahasiswa_id' => $mahasiswa->id, 'kelas_id' => $kelas->id, 'nilai_angka' => $nilaiAngka, 'nilai_huruf' => $this->convertToLetter($nilaiAngka)]);
             }
         }
 
-        $this->command->info('✅ Database seeded successfully with realistic data!');
-        $this->command->info('');
+        // Semester 3 (21 SKS - 7 MK) - 2023/2024 Ganjil (sudah ada di atas)
+        $ta2023Ganjil = TahunAkademik::where('tahun', '2023/2024')->where('semester', 'Ganjil')->first();
+        $krs3 = Krs::create(['mahasiswa_id' => $mahasiswa->id, 'tahun_akademik_id' => $ta2023Ganjil->id, 'status' => 'approved']);
+        foreach (MataKuliah::where('semester', 3)->get() as $mk) {
+            // Create kelas for semester 3
+            $kelas3 = Kelas::create([
+                'mata_kuliah_id' => $mk->id, 'dosen_id' => $dosen->id, 'nama_kelas' => 'A', 
+                'kapasitas' => 40, 'tahun_akademik_id' => $ta2023Ganjil->id,
+            ]);
+            KrsDetail::create(['krs_id' => $krs3->id, 'kelas_id' => $kelas3->id]);
+            $nilaiAngka = rand(72, 88);
+            Nilai::create(['mahasiswa_id' => $mahasiswa->id, 'kelas_id' => $kelas3->id, 'nilai_angka' => $nilaiAngka, 'nilai_huruf' => $this->convertToLetter($nilaiAngka)]);
+        }
+
+        // Semester 4 (21 SKS - 7 MK) - 2023/2024 Genap
+        $krs4 = Krs::create(['mahasiswa_id' => $mahasiswa->id, 'tahun_akademik_id' => $taLalu->id, 'status' => 'approved']);
+        foreach (MataKuliah::where('semester', 4)->get() as $mk) {
+            $kelas4 = Kelas::create([
+                'mata_kuliah_id' => $mk->id, 'dosen_id' => $dosen->id, 'nama_kelas' => 'A',
+                'kapasitas' => 40, 'tahun_akademik_id' => $taLalu->id,
+            ]);
+            KrsDetail::create(['krs_id' => $krs4->id, 'kelas_id' => $kelas4->id]);
+            $nilaiAngka = rand(74, 90);
+            Nilai::create(['mahasiswa_id' => $mahasiswa->id, 'kelas_id' => $kelas4->id, 'nilai_angka' => $nilaiAngka, 'nilai_huruf' => $this->convertToLetter($nilaiAngka)]);
+        }
+
+        // ==========================================
+        // 11. KRS SEMESTER 5 SEKARANG (Draft)
+        // ==========================================
+        $krsSekarang = Krs::create([
+            'mahasiswa_id' => $mahasiswa->id,
+            'tahun_akademik_id' => $taAktif->id,
+            'status' => 'draft',
+        ]);
+
+        // Create kelas untuk semester 5 dan ambil KRS
+        foreach (MataKuliah::where('semester', 5)->get() as $mk) {
+            $kelas5 = Kelas::create([
+                'mata_kuliah_id' => $mk->id, 'dosen_id' => $dosen->id, 'nama_kelas' => 'A',
+                'kapasitas' => 40, 'tahun_akademik_id' => $taAktif->id,
+            ]);
+            KrsDetail::create(['krs_id' => $krsSekarang->id, 'kelas_id' => $kelas5->id]);
+        }
+
+        // ==========================================
+        // OUTPUT
+        // ==========================================
+        $this->command->newLine();
+        $this->command->info('✅ Database seeded successfully!');
+        $this->command->newLine();
         $this->command->info('📋 Login Credentials:');
-        $this->command->info('   Admin    : admin@siakad.com / password');
-        $this->command->info('   Dosen    : ahmad.fauzi@siakad.com / password');
-        $this->command->info('   Mahasiswa: rizky.pratama@student.siakad.com / password');
+        $this->command->table(
+            ['Role', 'Email', 'Password'],
+            [
+                ['Superadmin', 'superadmin@siakad.test', 'password'],
+                ['Admin Fakultas', 'admin.ftik@siakad.test', 'password'],
+                ['Dosen', 'dosen@siakad.test', 'password'],
+                ['Mahasiswa', 'mahasiswa@siakad.test', 'password'],
+            ]
+        );
+        $this->command->newLine();
+        $this->command->info("📚 Kurikulum: {$prodi->nama}");
+        $this->command->info("   Total: 144 SKS | 8 Semester | " . MataKuliah::count() . " Mata Kuliah");
     }
 
-    private function generateRealisticGrade(int $angkatan): int
+    /**
+     * Kurikulum Teknik Informatika - 8 Semester - 144 SKS
+     */
+    private function getKurikulum(int $prodiId): array
     {
-        // Senior students tend to have better grades
-        $baseChance = $angkatan <= 2021 ? 75 : ($angkatan == 2022 ? 70 : 65);
-        $random = rand(0, 100);
-        
-        if ($random < 30) return rand($baseChance, 100);
-        if ($random < 60) return rand($baseChance - 15, $baseChance + 10);
-        if ($random < 85) return rand(60, $baseChance);
-        return rand(50, 70);
+        return [
+            // ====== SEMESTER 1 (20 SKS) ======
+            ['kode_mk' => 'TI101', 'nama_mk' => 'Algoritma dan Pemrograman I', 'sks' => 4, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI102', 'nama_mk' => 'Matematika Diskrit', 'sks' => 3, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI103', 'nama_mk' => 'Pengantar Teknologi Informasi', 'sks' => 3, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI104', 'nama_mk' => 'Kalkulus I', 'sks' => 3, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI105', 'nama_mk' => 'Fisika Dasar', 'sks' => 3, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI106', 'nama_mk' => 'Bahasa Inggris I', 'sks' => 2, 'semester' => 1, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI107', 'nama_mk' => 'Pendidikan Pancasila', 'sks' => 2, 'semester' => 1, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 2 (20 SKS) ======
+            ['kode_mk' => 'TI201', 'nama_mk' => 'Algoritma dan Pemrograman II', 'sks' => 4, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI202', 'nama_mk' => 'Struktur Data', 'sks' => 4, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI203', 'nama_mk' => 'Kalkulus II', 'sks' => 3, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI204', 'nama_mk' => 'Aljabar Linear', 'sks' => 3, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI205', 'nama_mk' => 'Bahasa Inggris II', 'sks' => 2, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI206', 'nama_mk' => 'Pendidikan Kewarganegaraan', 'sks' => 2, 'semester' => 2, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI207', 'nama_mk' => 'Praktikum Algoritma', 'sks' => 2, 'semester' => 2, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 3 (20 SKS) ======
+            ['kode_mk' => 'TI301', 'nama_mk' => 'Pemrograman Berorientasi Objek', 'sks' => 4, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI302', 'nama_mk' => 'Basis Data', 'sks' => 4, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI303', 'nama_mk' => 'Sistem Operasi', 'sks' => 3, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI304', 'nama_mk' => 'Statistika dan Probabilitas', 'sks' => 3, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI305', 'nama_mk' => 'Organisasi dan Arsitektur Komputer', 'sks' => 3, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI306', 'nama_mk' => 'Praktikum Basis Data', 'sks' => 2, 'semester' => 3, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI307', 'nama_mk' => 'Agama', 'sks' => 2, 'semester' => 3, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 4 (20 SKS) ======
+            ['kode_mk' => 'TI401', 'nama_mk' => 'Pemrograman Web', 'sks' => 4, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI402', 'nama_mk' => 'Jaringan Komputer', 'sks' => 4, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI403', 'nama_mk' => 'Rekayasa Perangkat Lunak', 'sks' => 3, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI404', 'nama_mk' => 'Interaksi Manusia dan Komputer', 'sks' => 3, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI405', 'nama_mk' => 'Analisis dan Perancangan Sistem', 'sks' => 3, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI406', 'nama_mk' => 'Praktikum Jaringan', 'sks' => 2, 'semester' => 4, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI407', 'nama_mk' => 'Etika Profesi', 'sks' => 2, 'semester' => 4, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 5 (20 SKS) ======
+            ['kode_mk' => 'TI501', 'nama_mk' => 'Pemrograman Mobile', 'sks' => 4, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI502', 'nama_mk' => 'Kecerdasan Buatan', 'sks' => 3, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI503', 'nama_mk' => 'Keamanan Sistem Informasi', 'sks' => 3, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI504', 'nama_mk' => 'Sistem Terdistribusi', 'sks' => 3, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI505', 'nama_mk' => 'Manajemen Proyek TI', 'sks' => 3, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI506', 'nama_mk' => 'Praktikum Mobile', 'sks' => 2, 'semester' => 5, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI507', 'nama_mk' => 'Kewirausahaan', 'sks' => 2, 'semester' => 5, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 6 (18 SKS) ======
+            ['kode_mk' => 'TI601', 'nama_mk' => 'Machine Learning', 'sks' => 3, 'semester' => 6, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI602', 'nama_mk' => 'Data Mining', 'sks' => 3, 'semester' => 6, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI603', 'nama_mk' => 'Cloud Computing', 'sks' => 3, 'semester' => 6, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI604', 'nama_mk' => 'Pengolahan Citra Digital', 'sks' => 3, 'semester' => 6, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI605', 'nama_mk' => 'Metodologi Penelitian', 'sks' => 2, 'semester' => 6, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI606', 'nama_mk' => 'Kerja Praktek', 'sks' => 4, 'semester' => 6, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 7 (14 SKS) ======
+            ['kode_mk' => 'TI701', 'nama_mk' => 'Internet of Things', 'sks' => 3, 'semester' => 7, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI702', 'nama_mk' => 'Big Data Analytics', 'sks' => 3, 'semester' => 7, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI703', 'nama_mk' => 'Natural Language Processing', 'sks' => 3, 'semester' => 7, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI704', 'nama_mk' => 'Proyek 1 (Proposal Skripsi)', 'sks' => 2, 'semester' => 7, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI705', 'nama_mk' => 'Pilihan 1', 'sks' => 3, 'semester' => 7, 'prodi_id' => $prodiId],
+
+            // ====== SEMESTER 8 (12 SKS) ======
+            ['kode_mk' => 'TI801', 'nama_mk' => 'Deep Learning', 'sks' => 3, 'semester' => 8, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI802', 'nama_mk' => 'Pilihan 2', 'sks' => 3, 'semester' => 8, 'prodi_id' => $prodiId],
+            ['kode_mk' => 'TI803', 'nama_mk' => 'Skripsi', 'sks' => 6, 'semester' => 8, 'prodi_id' => $prodiId],
+        ];
     }
 
     private function convertToLetter(int $nilai): string
     {
-        if ($nilai >= 85) return 'A';
-        if ($nilai >= 80) return 'B+';
-        if ($nilai >= 75) return 'B';
-        if ($nilai >= 70) return 'C+';
-        if ($nilai >= 65) return 'C';
-        if ($nilai >= 50) return 'D';
-        return 'E';
+        return match (true) {
+            $nilai >= 85 => 'A',
+            $nilai >= 80 => 'A-',
+            $nilai >= 75 => 'B+',
+            $nilai >= 70 => 'B',
+            $nilai >= 65 => 'C+',
+            $nilai >= 60 => 'C',
+            $nilai >= 55 => 'D',
+            default => 'E',
+        };
     }
 }

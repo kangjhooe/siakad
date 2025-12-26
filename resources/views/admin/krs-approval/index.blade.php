@@ -1,18 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        Approval KRS
+        KRS Overview
     </x-slot>
 
     <!-- Status Tabs -->
-    <!-- Filter & Search Bar -->
     <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Status Tabs -->
         <div class="flex items-center gap-1 border-b border-siakad-light dark:border-gray-700 overflow-x-auto">
             <a href="{{ url('admin/krs-approval') }}" class="px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap {{ !request('status') || request('status') === 'pending' ? 'text-siakad-primary dark:text-blue-400 border-siakad-primary dark:border-blue-400' : 'text-siakad-secondary dark:text-gray-400 border-transparent hover:text-siakad-dark dark:hover:text-gray-300' }}">
                 Pending
-                @php $pendingCount = \App\Models\Krs::where('status', 'pending')->count(); @endphp
-                @if($pendingCount > 0)
-                <span class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 rounded-full">{{ $pendingCount }}</span>
+                @if($statusCounts['pending'] > 0)
+                <span class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 rounded-full">{{ $statusCounts['pending'] }}</span>
                 @endif
             </a>
             <a href="{{ url('admin/krs-approval?status=approved') }}" class="px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap {{ request('status') === 'approved' ? 'text-siakad-primary dark:text-blue-400 border-siakad-primary dark:border-blue-400' : 'text-siakad-secondary dark:text-gray-400 border-transparent hover:text-siakad-dark dark:hover:text-gray-300' }}">
@@ -20,6 +18,9 @@
             </a>
             <a href="{{ url('admin/krs-approval?status=rejected') }}" class="px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap {{ request('status') === 'rejected' ? 'text-siakad-primary dark:text-blue-400 border-siakad-primary dark:border-blue-400' : 'text-siakad-secondary dark:text-gray-400 border-transparent hover:text-siakad-dark dark:hover:text-gray-300' }}">
                 Rejected
+            </a>
+            <a href="{{ url('admin/krs-approval?status=all') }}" class="px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap {{ request('status') === 'all' ? 'text-siakad-primary dark:text-blue-400 border-siakad-primary dark:border-blue-400' : 'text-siakad-secondary dark:text-gray-400 border-transparent hover:text-siakad-dark dark:hover:text-gray-300' }}">
+                Semua
             </a>
         </div>
 
@@ -40,31 +41,12 @@
         </form>
     </div>
 
-    <!-- Bulk Action Toolbar (Floating) -->
-    <form id="bulkForm" action="{{ route('admin.krs-approval.bulk-approve') }}" method="POST" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-siakad-dark text-white px-6 py-3 rounded-full shadow-xl items-center gap-4 transition-all duration-300">
-        @csrf
-        <div class="flex items-center gap-3">
-            <span class="font-semibold text-sm"><span id="selectedCount">0</span> mahasiswa dipilih</span>
-            <div class="h-4 w-px bg-white/20"></div>
-            <button type="submit" onclick="return confirm('Apakah Anda yakin ingin menyetujui semua KRS yang dipilih?')" class="flex items-center gap-2 text-sm font-medium text-emerald-300 hover:text-emerald-200 hover:underline">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Approve Terpilih
-            </button>
-        </div>
-        <button type="button" onclick="clearSelection()" class="ml-2 text-white/50 hover:text-white">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-    </form>
-
     <!-- Table Card (Desktop) -->
     <div class="hidden md:block card-saas overflow-hidden dark:bg-gray-800">
         <div class="overflow-x-auto">
             <table class="w-full table-saas">
                 <thead>
                     <tr class="bg-siakad-light/30 dark:bg-gray-900 border-b border-siakad-light dark:border-gray-700">
-                        <th class="py-3 px-5 w-10 text-center">
-                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-siakad-primary focus:ring-siakad-primary">
-                        </th>
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-16">#</th>
                         
                         <!-- Sortable: Mahasiswa -->
@@ -119,10 +101,7 @@
                 <tbody>
                     @forelse($krsList as $index => $krs)
                     <tr class="border-b border-siakad-light/50 dark:border-gray-700/50 hover:bg-siakad-light/10 transition">
-                        <td class="py-4 px-5 text-center">
-                            <input type="checkbox" name="krs_ids[]" value="{{ $krs->id }}" form="bulkForm" class="row-checkbox rounded border-gray-300 text-siakad-primary focus:ring-siakad-primary">
-                        </td>
-                        <td class="py-4 px-5 text-sm text-siakad-secondary dark:text-gray-400">{{ $index + 1 }}</td>
+                        <td class="py-4 px-5 text-sm text-siakad-secondary dark:text-gray-400">{{ $krsList->firstItem() + $index }}</td>
                         <td class="py-4 px-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-lg bg-siakad-primary dark:bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">
@@ -152,25 +131,9 @@
                             @endif
                         </td>
                         <td class="py-4 px-5 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('admin.krs-approval.show', $krs) }}" class="inline-flex p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                </a>
-                                @if($krs->status === 'pending')
-                                <form action="{{ route('admin.krs-approval.approve', $krs) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="p-2 text-siakad-secondary hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Approve">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    </button>
-                                </form>
-                                <form action="{{ route('admin.krs-approval.reject', $krs) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="p-2 text-siakad-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Reject">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </form>
-                                @endif
-                            </div>
+                            <a href="{{ route('admin.krs-approval.show', $krs) }}" class="inline-flex p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition" title="Lihat Detail">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </a>
                         </td>
                     </tr>
                     @empty
@@ -188,6 +151,13 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        @if($krsList->hasPages())
+        <div class="px-5 py-4 border-t border-siakad-light dark:border-gray-700">
+            {{ $krsList->links() }}
+        </div>
+        @endif
     </div>
 
     <!-- Mobile Card List -->
@@ -195,12 +165,9 @@
         @forelse($krsList as $krs)
         <div class="card-saas p-4 dark:bg-gray-800">
             <div class="flex items-start justify-between mb-3">
-                <div class="flex items-start gap-3">
-                    <input type="checkbox" name="krs_ids[]" value="{{ $krs->id }}" form="bulkForm" class="row-checkbox mt-1 rounded border-gray-300 text-siakad-primary focus:ring-siakad-primary">
-                    <div>
-                        <h4 class="font-bold text-siakad-dark dark:text-white">{{ $krs->mahasiswa->user->name ?? '-' }}</h4>
-                        <p class="text-xs text-siakad-secondary dark:text-gray-400 font-mono">{{ $krs->mahasiswa->nim ?? '-' }}</p>
-                    </div>
+                <div>
+                    <h4 class="font-bold text-siakad-dark dark:text-white">{{ $krs->mahasiswa->user->name ?? '-' }}</h4>
+                    <p class="text-xs text-siakad-secondary dark:text-gray-400 font-mono">{{ $krs->mahasiswa->nim ?? '-' }}</p>
                 </div>
                 @if($krs->status === 'approved')
                 <span class="inline-flex px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded-full">Approved</span>
@@ -224,24 +191,10 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 pt-3 border-t border-siakad-light dark:border-gray-700">
-                <a href="{{ route('admin.krs-approval.show', $krs) }}" class="flex-1 py-2 text-center text-xs font-medium bg-siakad-light dark:bg-gray-700 text-siakad-dark dark:text-white rounded-lg hover:bg-gray-200 transition">
-                    Detail
+            <div class="pt-3 border-t border-siakad-light dark:border-gray-700">
+                <a href="{{ route('admin.krs-approval.show', $krs) }}" class="block w-full py-2 text-center text-xs font-medium bg-siakad-light dark:bg-gray-700 text-siakad-dark dark:text-white rounded-lg hover:bg-gray-200 transition">
+                    Lihat Detail
                 </a>
-                @if($krs->status === 'pending')
-                <form action="{{ route('admin.krs-approval.approve', $krs) }}" method="POST" class="flex-1">
-                    @csrf
-                    <button type="submit" class="w-full py-2 text-center text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 rounded-lg hover:bg-emerald-200 transition">
-                        Approve
-                    </button>
-                </form>
-                <form action="{{ route('admin.krs-approval.reject', $krs) }}" method="POST" class="flex-1">
-                    @csrf
-                    <button type="submit" class="w-full py-2 text-center text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 rounded-lg hover:bg-red-200 transition">
-                        Reject
-                    </button>
-                </form>
-                @endif
             </div>
         </div>
         @empty
@@ -251,40 +204,3 @@
         @endforelse
     </div>
 </x-app-layout>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAll = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.row-checkbox');
-        const bulkForm = document.getElementById('bulkForm');
-        const selectedCount = document.getElementById('selectedCount');
-
-        function updateBulkToolbar() {
-            const checked = document.querySelectorAll('.row-checkbox:checked');
-            selectedCount.textContent = checked.length;
-            
-            if (checked.length > 0) {
-                bulkForm.classList.remove('hidden');
-                bulkForm.classList.add('flex');
-            } else {
-                bulkForm.classList.add('hidden');
-                bulkForm.classList.remove('flex');
-            }
-        }
-
-        selectAll.addEventListener('change', function() {
-            checkboxes.forEach(cb => cb.checked = this.checked);
-            updateBulkToolbar();
-        });
-
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', updateBulkToolbar);
-        });
-
-        window.clearSelection = function() {
-            checkboxes.forEach(cb => cb.checked = false);
-            selectAll.checked = false;
-            updateBulkToolbar();
-        };
-    });
-</script>

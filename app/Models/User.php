@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'fakultas_id',
     ];
 
     protected $hidden = [
@@ -38,5 +40,50 @@ class User extends Authenticatable
     public function dosen()
     {
         return $this->hasOne(Dosen::class);
+    }
+
+    public function fakultas()
+    {
+        return $this->belongsTo(Fakultas::class);
+    }
+
+    /**
+     * Check if user is superadmin (can access all data)
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    /**
+     * Check if user is admin (faculty-level or superadmin)
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['superadmin', 'admin_fakultas']);
+    }
+
+    /**
+     * Check if user can access a specific fakultas
+     */
+    public function canAccessFakultas(int $fakultasId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->fakultas_id === $fakultasId;
+    }
+
+    /**
+     * Get fakultas IDs this user can access
+     */
+    public function getAccessibleFakultasIds(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return Fakultas::pluck('id')->toArray();
+        }
+
+        return $this->fakultas_id ? [$this->fakultas_id] : [];
     }
 }

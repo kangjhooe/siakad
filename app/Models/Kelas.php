@@ -14,6 +14,7 @@ class Kelas extends Model
     protected $fillable = [
         'mata_kuliah_id',
         'dosen_id',
+        'tahun_akademik_id',
         'nama_kelas',
         'kapasitas',
         'is_closed',
@@ -22,6 +23,11 @@ class Kelas extends Model
     protected $casts = [
         'is_closed' => 'boolean',
     ];
+
+    public function tahunAkademik()
+    {
+        return $this->belongsTo(TahunAkademik::class);
+    }
 
     public function mataKuliah()
     {
@@ -51,6 +57,16 @@ class Kelas extends Model
     public function isFull(): bool
     {
         return $this->krsDetail()->count() >= $this->kapasitas;
+    }
+
+    public function pertemuan()
+    {
+        return $this->hasMany(Pertemuan::class);
+    }
+
+    public function tugas()
+    {
+        return $this->hasMany(Tugas::class);
     }
 }
 

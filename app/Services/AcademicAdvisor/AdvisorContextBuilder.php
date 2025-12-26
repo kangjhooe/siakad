@@ -199,21 +199,19 @@ class AdvisorContextBuilder
             }
         }
 
-        // 3. TERSEDIA_DI_KURIKULUM - from curriculum config
-        $curriculum = config("academic_rules.kurikulum.{$prodiKey}", []);
+        // 3. TERSEDIA_DI_KURIKULUM - from database (all mata kuliah not yet taken)
+        $allMataKuliah = MataKuliah::orderBy('semester')->orderBy('nama_mk')->get();
 
-        foreach ($curriculum as $semester => $courses) {
-            foreach ($courses as $course) {
-                if (!isset($statuses[$course['kode']])) {
-                    $statuses[$course['kode']] = [
-                        'kode' => $course['kode'],
-                        'nama' => $course['nama'],
-                        'sks' => $course['sks'],
-                        'status' => 'TERSEDIA_DI_KURIKULUM',
-                        'nilai' => null,
-                        'semester' => $semester,
-                    ];
-                }
+        foreach ($allMataKuliah as $mk) {
+            if (!isset($statuses[$mk->kode_mk])) {
+                $statuses[$mk->kode_mk] = [
+                    'kode' => $mk->kode_mk,
+                    'nama' => $mk->nama_mk,
+                    'sks' => $mk->sks,
+                    'status' => 'TERSEDIA_DI_KURIKULUM',
+                    'nilai' => null,
+                    'semester' => $mk->semester,
+                ];
             }
         }
 
@@ -221,17 +219,23 @@ class AdvisorContextBuilder
     }
 
     /**
-     * Get curriculum for specific prodi
+     * Get curriculum from database, grouped by semester
      */
     protected function getCurriculum(string $prodiKey): array
     {
-        $curriculum = config("academic_rules.kurikulum.{$prodiKey}", []);
+        $allMataKuliah = MataKuliah::orderBy('semester')->orderBy('nama_mk')->get();
 
+        $grouped = $allMataKuliah->groupBy('semester');
+        
         $result = [];
-        foreach ($curriculum as $semester => $courses) {
+        foreach ($grouped as $semester => $courses) {
             $result[] = [
-                'semester' => $semester,
-                'mata_kuliah' => $courses,
+                'semester' => (int) $semester,
+                'mata_kuliah' => $courses->map(fn($mk) => [
+                    'kode' => $mk->kode_mk,
+                    'nama' => $mk->nama_mk,
+                    'sks' => $mk->sks,
+                ])->values()->toArray(),
             ];
         }
 

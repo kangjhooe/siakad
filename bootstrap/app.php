@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             RateLimiter::for('sensitive', function (Request $request) {
                 return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
             });
+            
+            RateLimiter::for('ai-chat', function (Request $request) {
+                return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+            });
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -35,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'log.requests' => \App\Http\Middleware\RequestLoggingMiddleware::class,
+            'fakultas.scope' => \App\Http\Middleware\FakultasScopeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

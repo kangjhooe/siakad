@@ -24,7 +24,9 @@ class KrsController extends Controller
         $krs = $this->krsService->getActiveKrsOrNew($mahasiswa);
         
         // Load available classes (that are not yet taken), grouped by semester
+        // IMPORTANT: Only show kelas from mata kuliah of mahasiswa's prodi
         $availableKelas = \App\Models\Kelas::with(['mataKuliah', 'dosen.user', 'krsDetail'])
+            ->whereHas('mataKuliah', fn($q) => $q->where('prodi_id', $mahasiswa->prodi_id))
             ->whereDoesntHave('krsDetail', function($q) use ($krs) {
                 $q->where('krs_id', $krs->id);
             })

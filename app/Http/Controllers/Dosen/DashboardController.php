@@ -24,10 +24,18 @@ class DashboardController extends Controller
 
         $activeTA = TahunAkademik::where('is_active', true)->first();
 
-        // Get kelas yang diampu
-        $kelasList = Kelas::where('dosen_id', $dosen->id)
-            ->with(['mataKuliah', 'krsDetail.krs.mahasiswa', 'jadwal'])
-            ->get();
+        // Get kelas yang diampu (filter by active tahun akademik if available)
+        $kelasQuery = Kelas::where('dosen_id', $dosen->id)
+            ->with(['mataKuliah', 'krsDetail.krs.mahasiswa', 'jadwal']);
+        
+        if ($activeTA) {
+            $kelasQuery->where(function($q) use ($activeTA) {
+                $q->where('tahun_akademik_id', $activeTA->id)
+                  ->orWhereNull('tahun_akademik_id'); // Include legacy kelas without TA
+            });
+        }
+        
+        $kelasList = $kelasQuery->get();
 
         // Stats
         $totalKelas = $kelasList->count();

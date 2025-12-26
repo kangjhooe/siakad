@@ -41,16 +41,24 @@
                         </div>
                     </template>
 
-                    <!-- Typing Indicator -->
+                    <!-- Thinking Indicator with Status -->
                     <div x-show="isLoading" class="max-w-3xl mx-auto">
                         <div class="flex gap-4">
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-siakad-primary to-siakad-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-siakad-primary/20">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-siakad-primary to-siakad-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-siakad-primary/20 animate-pulse">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                             </div>
-                            <div class="flex items-center gap-1.5 pt-3">
-                                <span class="w-2 h-2 bg-siakad-secondary rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                                <span class="w-2 h-2 bg-siakad-secondary rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                                <span class="w-2 h-2 bg-siakad-secondary rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-center gap-2 text-sm text-siakad-secondary dark:text-slate-400">
+                                    <span x-text="thinkingStatus"></span>
+                                    <span class="flex gap-1">
+                                        <span class="w-1.5 h-1.5 bg-siakad-primary rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                                        <span class="w-1.5 h-1.5 bg-siakad-primary rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                                        <span class="w-1.5 h-1.5 bg-siakad-primary rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                                    </span>
+                                </div>
+                                <div class="mt-2 h-1 w-48 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-siakad-primary to-siakad-accent rounded-full animate-pulse" style="width: 60%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -81,7 +89,7 @@
                         </button>
                     </div>
                     <div class="flex items-center justify-center mt-3 text-[11px] text-slate-400 dark:text-slate-500">
-                        <span>Enter untuk kirim &nbsp;•&nbsp; Shift+Enter baris baru &nbsp;•&nbsp; Powered by Groq</span>
+                        <span>Enter untuk kirim &nbsp;•&nbsp; Shift+Enter baris baru &nbsp;•&nbsp; Powered by Qwen AI</span>
                     </div>
                 </div>
             </div>
@@ -95,6 +103,37 @@
                 input: '',
                 messages: [],
                 isLoading: false,
+                thinkingStatus: 'Menganalisis pertanyaan',
+                thinkingInterval: null,
+
+                startThinking() {
+                    const statuses = [
+                        'Menganalisis pertanyaan',
+                        'Memuat data akademik',
+                        'Memeriksa kurikulum',
+                        'Menganalisis progress',
+                        'Menyusun rekomendasi',
+                        'Memverifikasi data',
+                        'Menyiapkan jawaban',
+                        'Menyelesaikan analisis'
+                    ];
+                    let index = 0;
+                    this.thinkingStatus = statuses[0];
+                    this.thinkingInterval = setInterval(() => {
+                        if (index < statuses.length - 1) {
+                            index++;
+                            this.thinkingStatus = statuses[index];
+                        }
+                        // Stays at last status, doesn't loop back
+                    }, 2500);
+                },
+
+                stopThinking() {
+                    if (this.thinkingInterval) {
+                        clearInterval(this.thinkingInterval);
+                        this.thinkingInterval = null;
+                    }
+                },
 
                 async sendMessage() {
                     if (!this.input.trim() || this.isLoading) return;
@@ -107,6 +146,7 @@
                     this.scrollToBottom();
                     
                     this.isLoading = true;
+                    this.startThinking();
 
                     try {
                         const response = await fetch('{{ route("mahasiswa.ai-advisor.chat") }}', {
@@ -133,6 +173,7 @@
                             content: 'Maaf, terjadi kesalahan jaringan. Silakan coba lagi.' 
                         });
                     } finally {
+                        this.stopThinking();
                         this.isLoading = false;
                         this.scrollToBottom();
                     }

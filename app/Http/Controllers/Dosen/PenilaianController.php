@@ -40,7 +40,7 @@ class PenilaianController extends Controller
         // Group by semester
         $kelasGrouped = $kelasAjar->groupBy(fn($k) => $k->mataKuliah->semester);
 
-        // Get available semesters for filter
+        // Get available semesters from already loaded data (avoid N+1)
         $semesterList = $dosen->kelas()
             ->with('mataKuliah')
             ->get()

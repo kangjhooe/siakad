@@ -14,11 +14,13 @@ class UserService
     {
         return DB::transaction(function () use ($data) {
             $user = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'password' => Hash::make($data['password']),
-                'role'     => $data['role'],
+                'name'        => $data['name'],
+                'email'       => $data['email'],
+                'password'    => Hash::make($data['password']),
+                'role'        => $data['role'],
+                'fakultas_id' => $data['fakultas_id'] ?? null,
             ]);
+
 
             if ($data['role'] === 'mahasiswa') {
                 Mahasiswa::create([

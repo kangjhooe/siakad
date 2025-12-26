@@ -18,7 +18,7 @@ class KelasController extends Controller
 
     public function index(Request $request)
     {
-        $query = \App\Models\Kelas::with(['mataKuliah', 'dosen.user', 'jadwal']);
+        $query = \App\Models\Kelas::with(['mataKuliah', 'dosen.user', 'dosen.prodi', 'jadwal']);
 
         // Search
         if ($search = $request->get('search')) {
@@ -27,6 +27,12 @@ class KelasController extends Controller
                   ->orWhereHas('mataKuliah', fn($q2) => $q2->where('nama_mk', 'like', "%{$search}%")->orWhere('kode_mk', 'like', "%{$search}%"))
                   ->orWhereHas('dosen.user', fn($q3) => $q3->where('name', 'like', "%{$search}%"));
             });
+        }
+
+        // Faculty scoping for admin_fakultas (scope by dosen's prodi's fakultas)
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $query->whereHas('dosen.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
         }
 
         // Sorting
@@ -50,10 +56,17 @@ class KelasController extends Controller
 
         $kelas = $query->paginate(config('siakad.pagination', 15))->withQueryString();
         $mataKuliah = $this->akademikService->getAllMataKuliah();
-        $dosen = \App\Models\Dosen::with('user')->get();
+        
+        // Scope dosen list for dropdown
+        $dosenQuery = \App\Models\Dosen::with('user');
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $dosenQuery->whereHas('prodi', fn($q) => $q->where('fakultas_id', $request->get('fakultas_scope')));
+        }
+        $dosen = $dosenQuery->get();
         
         return view('admin.kelas.index', compact('kelas', 'mataKuliah', 'dosen'));
     }
+
 
     public function store(Request $request)
     {

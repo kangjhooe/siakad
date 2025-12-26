@@ -75,6 +75,13 @@ class AkademikService
     // --- Kelas ---
     public function createKelas($data) {
         $data['kapasitas'] = $data['kapasitas'] ?? config('siakad.kelas_kapasitas_default');
+        
+        // Auto-assign active tahun akademik if not specified
+        if (!isset($data['tahun_akademik_id'])) {
+            $activeTA = TahunAkademik::where('is_active', true)->first();
+            $data['tahun_akademik_id'] = $activeTA?->id;
+        }
+        
         return Kelas::create($data);
     }
     

@@ -43,4 +43,13 @@ return [
         'api_key' => env('GROQ_API_KEY'),
     ],
 
+    'qwen' => [
+        'api_key' => env('QWEN_API_KEY'),
+        'model' => env('QWEN_MODEL', 'Qwen/Qwen3-4B-Instruct-2507'),
+        'base_url' => env('QWEN_BASE_URL', 'https://api.bytez.com/models/v2'),
+    ],
+
+    // AI Provider selection: 'gemini' or 'qwen'
+    'ai_provider' => env('AI_PROVIDER', 'qwen'),
+
 ];

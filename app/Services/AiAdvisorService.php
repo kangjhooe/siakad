@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
 use App\Models\Mahasiswa;
+use App\Models\AiConversationLog;
 use App\Services\AcademicAdvisor\AdvisorContextBuilder;
 use App\Services\AcademicAdvisor\AdvisorGuards;
 
@@ -13,7 +14,8 @@ class AiAdvisorService
     protected AdvisorContextBuilder $contextBuilder;
     protected AdvisorGuards $guards;
     protected string $apiKey;
-    protected string $model = 'gemini-2.5-flash-lite';
+    protected string $model;
+    protected string $provider;
 
     protected const MAX_RETRIES = 1;
 
@@ -23,7 +25,17 @@ class AiAdvisorService
     ) {
         $this->contextBuilder = $contextBuilder;
         $this->guards = $guards;
-        $this->apiKey = config('services.gemini.api_key', '');
+        
+        // Get AI provider from config (default: qwen)
+        $this->provider = config('services.ai_provider', 'qwen');
+        
+        if ($this->provider === 'qwen') {
+            $this->apiKey = config('services.qwen.api_key', '');
+            $this->model = config('services.qwen.model', 'Qwen/Qwen3-4B-Instruct-2507');
+        } else {
+            $this->apiKey = config('services.gemini.api_key', '');
+            $this->model = 'gemini-2.5-flash-lite';
+        }
     }
 
     /**
@@ -40,6 +52,7 @@ class AiAdvisorService
 
         try {
             // Step 1: Build context
+            $startTime = microtime(true); // Start timer for logging
             $context = $this->contextBuilder->build($mahasiswa);
 
             // Step 2: Run pre-guards
@@ -83,13 +96,54 @@ class AiAdvisorService
 
                 // Use replacement output if guard provides one
                 if ($guardResult['replacement_output']) {
+                    $debugInfo = '';
+                    if (config('app.debug')) {
+                        $debugInfo = "\n\n---\n**[DEBUG INFO]**\n";
+                        foreach ($guardResult['issues'] as $issue) {
+                            $guard = $issue['guard'] ?? 'unknown';
+                            $debugInfo .= "- Guard: `{$guard}`\n";
+                            if (isset($issue['violations'])) {
+                                $debugInfo .= "  - Violations: " . implode(', ', $issue['violations']) . "\n";
+                            }
+                            if (isset($issue['issue'])) {
+                                $debugInfo .= "  - Issue: {$issue['issue']}\n";
+                            }
+                            if (isset($issue['invalid_courses'])) {
+                                $debugInfo .= "  - Invalid courses: " . implode(', ', $issue['invalid_courses']) . "\n";
+                            }
+                            if (isset($issue['mismatches'])) {
+                                foreach ($issue['mismatches'] as $m) {
+                                    $debugInfo .= "  - Mismatch: {$m['field']} (claimed: {$m['claimed']}, actual: {$m['actual']})\n";
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Log guard-applied conversation
+                    $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
+                    $this->logConversation($mahasiswa, $message, $guardResult['replacement_output'], [
+                        'response_time_ms' => $responseTimeMs,
+                        'guard_applied' => true,
+                        'guard_issues' => $guardResult['issues'],
+                    ]);
+                    
                     return [
                         'success' => true,
-                        'message' => $guardResult['replacement_output'],
+                        'message' => $guardResult['replacement_output'] . $debugInfo,
                         'guard_applied' => true,
                     ];
                 }
             }
+
+            // Calculate response time
+            $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
+            
+            // Log successful conversation
+            $this->logConversation($mahasiswa, $message, $output, [
+                'response_time_ms' => $responseTimeMs,
+                'guard_applied' => false,
+                'guard_issues' => null,
+            ]);
 
             return [
                 'success' => true,
@@ -106,6 +160,32 @@ class AiAdvisorService
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Log AI conversation to database
+     */
+    protected function logConversation(Mahasiswa $mahasiswa, string $question, string $answer, array $metadata = []): void
+    {
+        try {
+            AiConversationLog::create([
+                'user_id' => $mahasiswa->user_id,
+                'mahasiswa_id' => $mahasiswa->id,
+                'session_id' => session()->getId(),
+                'question' => $question,
+                'answer' => $answer,
+                'context_summary' => "Semester {$mahasiswa->semester_aktif}, SKS: " . ($metadata['sks_lulus'] ?? 'N/A'),
+                'response_time_ms' => $metadata['response_time_ms'] ?? 0,
+                'model_used' => $this->model,
+                'provider' => $this->provider,
+                'guard_applied' => $metadata['guard_applied'] ?? false,
+                'guard_issues' => $metadata['guard_issues'] ?? null,
+                'was_retry' => $metadata['was_retry'] ?? false,
+            ]);
+        } catch (\Exception $e) {
+            // Silently fail - don't break main functionality
+            \Log::warning('Failed to log AI conversation: ' . $e->getMessage());
         }
     }
 
@@ -130,7 +210,7 @@ class AiAdvisorService
     }
 
     /**
-     * Call LLM API (Gemini via OpenAI compatibility)
+     * Call LLM API (supports Gemini and Qwen via Bytez)
      */
     protected function callLlm(string $systemPrompt, string $message, array $history = []): array
     {
@@ -157,39 +237,104 @@ class AiAdvisorService
         ];
 
         try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', [
-                    'model' => $this->model,
-                    'messages' => $messages,
-                    'temperature' => 0.3, // Lower temperature for more deterministic outputs
-                    'max_completion_tokens' => 1024,
-                ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                $text = $data['choices'][0]['message']['content'] ?? 'Maaf, saya tidak bisa memberikan respons saat ini.';
-
-                return [
-                    'success' => true,
-                    'message' => $text,
-                ];
+            if ($this->provider === 'qwen') {
+                return $this->callQwenApi($messages);
+            } else {
+                return $this->callGeminiApi($messages);
             }
-
-            $error = $response->json();
-            return [
-                'success' => false,
-                'message' => 'Gagal mendapatkan respons dari AI: ' . ($error['error']['message'] ?? 'Unknown error'),
-            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Terjadi kesalahan koneksi: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Call Qwen API via Bytez (OpenAI-compatible endpoint)
+     */
+    protected function callQwenApi(array $messages): array
+    {
+        // Bytez OpenAI-compatible endpoint
+        $url = 'https://api.bytez.com/models/v2/openai/v1/chat/completions';
+
+        $response = Http::timeout(60)
+            ->withHeaders([
+                'Authorization' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])
+            ->post($url, [
+                'model' => $this->model,
+                'messages' => $messages,
+                'max_tokens' => 1024,
+                'temperature' => 0,
+                'stream' => false,
+            ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            
+            // OpenAI-compatible response format
+            $text = $data['choices'][0]['message']['content'] ?? 'Maaf, saya tidak bisa memberikan respons saat ini.';
+            
+            // Clean thinking tags if present (Qwen3 uses <think> tags)
+            $text = $this->cleanQwenThinkingTags($text);
+
+            return [
+                'success' => true,
+                'message' => $text,
+            ];
+        }
+
+        $error = $response->json();
+        return [
+            'success' => false,
+            'message' => 'Gagal mendapatkan respons dari AI: ' . ($error['error']['message'] ?? $error['error'] ?? $error['message'] ?? 'Unknown error'),
+        ];
+    }
+
+    /**
+     * Call Gemini API (OpenAI compatibility mode)
+     */
+    protected function callGeminiApi(array $messages): array
+    {
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])
+            ->post('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', [
+                'model' => $this->model,
+                'messages' => $messages,
+                'temperature' => 0,
+                'max_completion_tokens' => 1024,
+            ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $text = $data['choices'][0]['message']['content'] ?? 'Maaf, saya tidak bisa memberikan respons saat ini.';
+
+            return [
+                'success' => true,
+                'message' => $text,
+            ];
+        }
+
+        $error = $response->json();
+        return [
+            'success' => false,
+            'message' => 'Gagal mendapatkan respons dari AI: ' . ($error['error']['message'] ?? 'Unknown error'),
+        ];
+    }
+
+    /**
+     * Clean Qwen3 thinking tags from response
+     */
+    protected function cleanQwenThinkingTags(string $text): string
+    {
+        // Remove <think>...</think> blocks
+        $text = preg_replace('/<think>.*?<\/think>/s', '', $text);
+        return trim($text);
     }
 
     /**
@@ -237,33 +382,16 @@ class AiAdvisorService
         ];
 
         try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', [
-                    'model' => $this->model,
-                    'messages' => $messages,
-                    'temperature' => 0.1, // Even lower for retry
-                    'max_completion_tokens' => 1024,
-                ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                $text = $data['choices'][0]['message']['content'] ?? '';
-
-                return [
-                    'success' => true,
-                    'message' => $text,
-                    'is_retry' => true,
-                ];
+            if ($this->provider === 'qwen') {
+                $result = $this->callQwenApi($messages);
+            } else {
+                $result = $this->callGeminiApi($messages);
             }
 
-            return [
-                'success' => false,
-                'message' => 'Retry failed',
-            ];
+            if ($result['success']) {
+                $result['is_retry'] = true;
+            }
+            return $result;
         } catch (\Exception $e) {
             return [
                 'success' => false,

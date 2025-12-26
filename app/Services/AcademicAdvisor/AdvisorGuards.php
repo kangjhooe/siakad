@@ -180,6 +180,19 @@ class AdvisorGuards
         $retryPrompt = null;
         $replacementOutput = null;
 
+        // Check out-of-context guard FIRST (highest priority)
+        $outOfContextResult = $this->outOfContextGuard($output);
+        if ($outOfContextResult['status'] !== self::GUARD_PASS) {
+            // Immediately return replacement - don't process further
+            return [
+                'passed' => false,
+                'issues' => [['guard' => 'out_of_context', 'issue' => $outOfContextResult['issue']]],
+                'should_retry' => false,
+                'retry_prompt' => null,
+                'replacement_output' => $outOfContextResult['recommended_response'],
+            ];
+        }
+
         // Check assumption guard
         $assumptionResult = $this->preventGenericAssumptions($output);
         if ($assumptionResult['status'] !== self::GUARD_PASS) {
@@ -199,9 +212,34 @@ class AdvisorGuards
                 'guard' => 'attendance',
                 'issue' => $attendanceResult['issue'],
             ];
-            // Attendance guard failure takes precedence if it fails
             if ($replacementOutput === null) {
                 $replacementOutput = $attendanceResult['recommended_response'];
+            }
+        }
+
+        // Check course reference guard
+        $courseResult = $this->courseReferenceGuard($context, $output);
+        if ($courseResult['status'] !== self::GUARD_PASS) {
+            $issues[] = [
+                'guard' => 'course_reference',
+                'invalid_courses' => $courseResult['invalid_courses'],
+            ];
+            $shouldRetry = true;
+            if ($retryPrompt === null) {
+                $retryPrompt = $courseResult['retry_prompt'];
+            }
+        }
+
+        // Check numeric validation guard
+        $numericResult = $this->numericValidationGuard($context, $output);
+        if ($numericResult['status'] !== self::GUARD_PASS) {
+            $issues[] = [
+                'guard' => 'numeric_validation',
+                'mismatches' => $numericResult['mismatches'],
+            ];
+            $shouldRetry = true;
+            if ($retryPrompt === null) {
+                $retryPrompt = $numericResult['retry_prompt'];
             }
         }
 
@@ -299,5 +337,211 @@ PROMPT;
         }
 
         return false;
+    }
+
+    /**
+     * Guard: Detect out-of-context/non-academic topics
+     */
+    public function outOfContextGuard(string $output): array
+    {
+        // Only check for truly non-academic topics (not "pribadi" which causes false positives)
+        $nonAcademicPatterns = [
+            'harga iphone' => 'produk/harga',
+            'harga hp' => 'produk/harga',
+            'harga laptop' => 'produk/harga',
+            'bitcoin' => 'cryptocurrency',
+            'crypto' => 'cryptocurrency',
+            'saham' => 'investasi',
+            'forex' => 'trading',
+            'pacaran' => 'hubungan personal',
+        ];
+
+        $outputLower = strtolower($output);
+        
+        // Skip if output is clearly a rejection message
+        $rejectionPhrases = [
+            'tidak dapat',
+            'di luar',
+            'belum tersedia',
+            'tidak relevan',
+            'mohon maaf',
+            'di luar lingkup',
+            'tidak tersedia dalam sistem'
+        ];
+        
+        foreach ($rejectionPhrases as $phrase) {
+            if (str_contains($outputLower, $phrase)) {
+                return [
+                    'status' => self::GUARD_PASS,
+                    'issue' => null,
+                    'recommended_response' => null,
+                ];
+            }
+        }
+        
+        // Check for non-academic patterns
+        foreach ($nonAcademicPatterns as $keyword => $topic) {
+            if (str_contains($outputLower, $keyword)) {
+                return [
+                    'status' => self::GUARD_FAIL,
+                    'issue' => "AI merespons topik non-akademik: {$topic}",
+                    'recommended_response' => $this->generateOutOfContextResponse(),
+                ];
+            }
+        }
+
+        return [
+            'status' => self::GUARD_PASS,
+            'issue' => null,
+            'recommended_response' => null,
+        ];
+    }
+
+    /**
+     * Guard: Validate course references exist in context
+     */
+    public function courseReferenceGuard(array $context, string $output): array
+    {
+        // Extract valid course codes from context
+        $validCourses = [];
+        foreach ($context['course_statuses'] ?? [] as $course) {
+            $validCourses[strtoupper($course['kode'])] = $course['nama'];
+        }
+
+        // Pattern to find course codes in output (format: XXX000 or similar)
+        preg_match_all('/\b([A-Z]{2,4}[0-9]{3,4})\b/i', $output, $matches);
+        
+        $invalidCourses = [];
+        foreach ($matches[1] as $code) {
+            $codeUpper = strtoupper($code);
+            if (!isset($validCourses[$codeUpper])) {
+                $invalidCourses[] = $code;
+            }
+        }
+
+        if (!empty($invalidCourses)) {
+            return [
+                'status' => self::GUARD_RETRY,
+                'invalid_courses' => $invalidCourses,
+                'retry_prompt' => $this->generateCourseRetryPrompt($invalidCourses),
+            ];
+        }
+
+        return [
+            'status' => self::GUARD_PASS,
+            'invalid_courses' => [],
+            'retry_prompt' => null,
+        ];
+    }
+
+    /**
+     * Guard: Validate numeric data matches context
+     */
+    public function numericValidationGuard(array $context, string $output): array
+    {
+        $mismatches = [];
+        
+        // Get key numbers from context
+        $contextSksLulus = $context['academic_summary']['total_sks_lulus'] ?? null;
+        $contextIpk = $context['academic_summary']['ipk'] ?? null;
+        $contextGraduationSks = $context['prodi_rules']['graduation_total_sks'] ?? null;
+
+        // Check for SKS claims in output
+        if ($contextSksLulus !== null) {
+            // Pattern: "XX SKS" or "menyelesaikan XX"
+            if (preg_match('/menyelesaikan\s+(\d+)\s*SKS/i', $output, $match)) {
+                $claimedSks = (int) $match[1];
+                if ($claimedSks !== $contextSksLulus && abs($claimedSks - $contextSksLulus) > 2) {
+                    $mismatches[] = [
+                        'field' => 'total_sks_lulus',
+                        'claimed' => $claimedSks,
+                        'actual' => $contextSksLulus,
+                    ];
+                }
+            }
+        }
+
+        // Check for graduation SKS requirement claims
+        if ($contextGraduationSks !== null) {
+            if (preg_match('/lulus.*?(\d{3})\s*SKS|minimal\s*(\d{3})\s*SKS/i', $output, $match)) {
+                $claimedGrad = (int) ($match[1] ?: $match[2]);
+                if ($claimedGrad !== $contextGraduationSks) {
+                    $mismatches[] = [
+                        'field' => 'graduation_sks',
+                        'claimed' => $claimedGrad,
+                        'actual' => $contextGraduationSks,
+                    ];
+                }
+            }
+        }
+
+        if (!empty($mismatches)) {
+            return [
+                'status' => self::GUARD_RETRY,
+                'mismatches' => $mismatches,
+                'retry_prompt' => $this->generateNumericRetryPrompt($mismatches),
+            ];
+        }
+
+        return [
+            'status' => self::GUARD_PASS,
+            'mismatches' => [],
+            'retry_prompt' => null,
+        ];
+    }
+
+    /**
+     * Generate response for out-of-context questions
+     */
+    protected function generateOutOfContextResponse(): string
+    {
+        return "Mohon maaf, pertanyaan tersebut **di luar lingkup layanan** AI Academic Advisor. " .
+               "Saya hanya dapat membantu dengan pertanyaan seputar akademik, seperti:\n" .
+               "- Progress kelulusan dan SKS\n" .
+               "- Mata kuliah dan kurikulum\n" .
+               "- Syarat skripsi dan kerja praktek\n" .
+               "- Jadwal dan presensi\n\n" .
+               "Silakan ajukan pertanyaan terkait akademik Anda.";
+    }
+
+    /**
+     * Generate retry prompt for invalid course references
+     */
+    protected function generateCourseRetryPrompt(array $invalidCourses): string
+    {
+        $codes = implode(', ', $invalidCourses);
+        return <<<PROMPT
+PERINGATAN: Respons sebelumnya menyebutkan kode mata kuliah yang TIDAK ADA dalam data: {$codes}.
+
+ATURAN KETAT:
+1. HANYA gunakan kode mata kuliah yang ada dalam course_statuses dari context.
+2. JANGAN mengarang kode mata kuliah.
+3. Jika tidak ada data, katakan "data tidak tersedia".
+
+Ulangi jawaban dengan kode mata kuliah yang benar dari context:
+PROMPT;
+    }
+
+    /**
+     * Generate retry prompt for numeric mismatches
+     */
+    protected function generateNumericRetryPrompt(array $mismatches): string
+    {
+        $details = [];
+        foreach ($mismatches as $m) {
+            $details[] = "{$m['field']}: Anda sebut {$m['claimed']}, seharusnya {$m['actual']}";
+        }
+        $detailStr = implode('; ', $details);
+
+        return <<<PROMPT
+PERINGATAN: Respons sebelumnya mengandung angka yang TIDAK SESUAI dengan data context:
+{$detailStr}
+
+ATURAN KETAT:
+1. Gunakan angka PERSIS dari context JSON.
+2. JANGAN membulatkan atau mengira-ngira.
+
+Ulangi jawaban dengan angka yang benar:
+PROMPT;
     }
 }

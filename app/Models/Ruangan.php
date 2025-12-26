@@ -19,6 +19,7 @@ class Ruangan extends Model
         'lantai',
         'fasilitas',
         'is_active',
+        'fakultas_id',
     ];
 
     protected $casts = [
@@ -26,6 +27,11 @@ class Ruangan extends Model
         'lantai' => 'integer',
         'is_active' => 'boolean',
     ];
+
+    public function fakultas()
+    {
+        return $this->belongsTo(Fakultas::class);
+    }
 
     /**
      * Jadwal yang menggunakan ruangan ini
@@ -43,3 +49,4 @@ class Ruangan extends Model
         return $query->where('is_active', true);
     }
 }
+

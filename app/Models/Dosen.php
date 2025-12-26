@@ -39,5 +39,34 @@ class Dosen extends Model
     {
         return $this->hasMany(Mahasiswa::class, 'dosen_pa_id');
     }
+
+    /**
+     * Skripsi yang dibimbing (sebagai pembimbing 1 atau 2)
+     */
+    public function skripsiPembimbing1()
+    {
+        return $this->hasMany(Skripsi::class, 'pembimbing1_id');
+    }
+
+    public function skripsiPembimbing2()
+    {
+        return $this->hasMany(Skripsi::class, 'pembimbing2_id');
+    }
+
+    /**
+     * KP yang dibimbing
+     */
+    public function kerjaPraktek()
+    {
+        return $this->hasMany(KerjaPraktek::class, 'pembimbing_id');
+    }
+
+    /**
+     * Kehadiran dosen
+     */
+    public function kehadiran()
+    {
+        return $this->hasMany(KehadiranDosen::class);
+    }
 }
 

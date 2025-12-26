@@ -133,7 +133,7 @@
                         </td>
                         <td class="py-4 px-5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <button onclick="editMK({{ $mk->id }}, '{{ $mk->kode_mk }}', '{{ addslashes($mk->nama_mk) }}', {{ $mk->sks }}, {{ $mk->semester }})" class="p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition" title="Edit">
+                            <button onclick="editMK({{ $mk->id }}, '{{ $mk->kode_mk }}', '{{ addslashes($mk->nama_mk) }}', {{ $mk->sks }}, {{ $mk->semester }}, {{ $mk->prodi_id ?? 'null' }}, {{ $mk->prodi?->fakultas_id ?? 'null' }})" class="p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
                                 <form action="{{ route('admin.mata-kuliah.destroy', $mk) }}" method="POST" onsubmit="return confirm('Hapus mata kuliah ini?')">
@@ -188,7 +188,7 @@
             </div>
 
             <div class="flex items-center gap-2 pt-3 border-t border-siakad-light dark:border-gray-700">
-                <button onclick="editMK({{ $mk->id }}, '{{ $mk->kode_mk }}', '{{ addslashes($mk->nama_mk) }}', {{ $mk->sks }}, {{ $mk->semester }})" class="flex-1 py-2 text-sm font-medium text-siakad-secondary bg-siakad-light/50 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-siakad-light hover:text-siakad-primary dark:hover:bg-gray-600 transition text-center">
+                <button onclick="editMK({{ $mk->id }}, '{{ $mk->kode_mk }}', '{{ addslashes($mk->nama_mk) }}', {{ $mk->sks }}, {{ $mk->semester }}, {{ $mk->prodi_id ?? 'null' }}, {{ $mk->prodi?->fakultas_id ?? 'null' }})" class="flex-1 py-2 text-sm font-medium text-siakad-secondary bg-siakad-light/50 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-siakad-light hover:text-siakad-primary dark:hover:bg-gray-600 transition text-center">
                     Edit
                 </button>
                 <form action="{{ route('admin.mata-kuliah.destroy', $mk) }}" method="POST" onsubmit="return confirm('Hapus mata kuliah ini?')" class="flex-1">
@@ -222,6 +222,30 @@
             <form action="{{ route('admin.mata-kuliah.store') }}" method="POST">
                 @csrf
                 <div class="p-6 space-y-4">
+                    @if($isSuperAdmin)
+                    <!-- Fakultas dropdown for superadmin -->
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fakultas</label>
+                        <select id="createFakultasSelect" onchange="filterProdiCreate()" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Pilih Fakultas</option>
+                            @foreach($fakultasList as $fakultas)
+                            <option value="{{ $fakultas->id }}">{{ $fakultas->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    
+                    <!-- Prodi dropdown -->
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Program Studi</label>
+                        <select name="prodi_id" id="createProdiSelect" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+                            <option value="">Pilih Program Studi</option>
+                            @foreach($prodiList as $prodi)
+                            <option value="{{ $prodi->id }}" data-fakultas="{{ $prodi->fakultas_id }}">{{ $prodi->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kode MK</label>
                         <input type="text" name="kode_mk" class="input-saas w-full px-4 py-2.5 text-sm font-mono dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Contoh: TI101, SI201, MK001" required>
@@ -259,6 +283,30 @@
             <form id="editForm" method="POST">
                 @csrf @method('PUT')
                 <div class="p-6 space-y-4">
+                    @if($isSuperAdmin)
+                    <!-- Fakultas dropdown for superadmin -->
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fakultas</label>
+                        <select id="editFakultasSelect" onchange="filterProdiEdit()" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Pilih Fakultas</option>
+                            @foreach($fakultasList as $fakultas)
+                            <option value="{{ $fakultas->id }}">{{ $fakultas->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    
+                    <!-- Prodi dropdown -->
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Program Studi</label>
+                        <select name="prodi_id" id="editProdiSelect" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+                            <option value="">Pilih Program Studi</option>
+                            @foreach($prodiList as $prodi)
+                            <option value="{{ $prodi->id }}" data-fakultas="{{ $prodi->fakultas_id }}">{{ $prodi->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kode MK</label>
                         <input type="text" name="kode_mk" id="editKode" class="input-saas w-full px-4 py-2.5 text-sm font-mono dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
@@ -287,13 +335,54 @@
     </div>
 
     <script>
-        function editMK(id, kode, nama, sks, semester) {
+        // Filter prodi based on fakultas for Create modal
+        function filterProdiCreate() {
+            const fakultasId = document.getElementById('createFakultasSelect')?.value || '';
+            const prodiSelect = document.getElementById('createProdiSelect');
+            const options = prodiSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return; // Keep placeholder
+                const optFakultasId = option.getAttribute('data-fakultas');
+                option.style.display = (fakultasId === '' || optFakultasId === fakultasId) ? '' : 'none';
+            });
+            
+            // Reset selection
+            prodiSelect.value = '';
+        }
+        
+        // Filter prodi based on fakultas for Edit modal
+        function filterProdiEdit() {
+            const fakultasId = document.getElementById('editFakultasSelect')?.value || '';
+            const prodiSelect = document.getElementById('editProdiSelect');
+            const options = prodiSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return;
+                const optFakultasId = option.getAttribute('data-fakultas');
+                option.style.display = (fakultasId === '' || optFakultasId === fakultasId) ? '' : 'none';
+            });
+            
+            prodiSelect.value = '';
+        }
+        
+        function editMK(id, kode, nama, sks, semester, prodiId, fakultasId) {
             document.getElementById('editForm').action = `/admin/mata-kuliah/${id}`;
             document.getElementById('editKode').value = kode;
             document.getElementById('editNama').value = nama;
             document.getElementById('editSks').value = sks;
             document.getElementById('editSemester').value = semester;
+            
+            // Set fakultas and prodi
+            const fakultasSelect = document.getElementById('editFakultasSelect');
+            if (fakultasSelect) {
+                fakultasSelect.value = fakultasId || '';
+                filterProdiEdit();
+            }
+            document.getElementById('editProdiSelect').value = prodiId || '';
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
     </script>
 </x-app-layout>
+

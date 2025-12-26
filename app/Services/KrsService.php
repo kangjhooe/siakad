@@ -2,21 +2,32 @@
 
 namespace App\Services;
 
+use App\Exceptions\KrsException;
 use App\Models\Kelas;
 use App\Models\Krs;
 use App\Models\KrsDetail;
 use App\Models\Mahasiswa;
-use App\Models\TahunAkademik;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class KrsService
 {
+    protected AkademikService $akademikService;
+    protected AkademikCalculationService $calculationService;
+
+    public function __construct(
+        AkademikService $akademikService,
+        AkademikCalculationService $calculationService
+    ) {
+        $this->akademikService = $akademikService;
+        $this->calculationService = $calculationService;
+    }
+
     public function getActiveKrsOrNew(Mahasiswa $mahasiswa)
     {
-        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+        // Use cached Tahun Akademik from AkademikService
+        $tahunAktif = $this->akademikService->getActiveTahun();
         if (!$tahunAktif) {
-            throw new Exception('Tidak ada tahun akademik yang aktif.');
+            throw KrsException::noActiveSemester();
         }
 
         return Krs::firstOrCreate(
@@ -28,11 +39,35 @@ class KrsService
         );
     }
 
+    /**
+     * Calculate max SKS based on last semester's IPS
+     */
+    public function getMaxSksForMahasiswa(Mahasiswa $mahasiswa): int
+    {
+        // Get IPS history to find last semester's IPS
+        $ipsHistory = $this->calculationService->getIPSHistory($mahasiswa);
+        
+        // Filter only semesters with actual grades (IPS > 0)
+        $semestersWithGrades = $ipsHistory->filter(fn($s) => $s['ips'] > 0);
+        
+        if ($semestersWithGrades->isEmpty()) {
+            // New student (semester 1) - use default max SKS
+            return config('siakad.maks_sks.default', 24);
+        }
+
+        // Get the last semester's IPS
+        $lastSemester = $semestersWithGrades->last();
+        $lastIps = $lastSemester['ips'] ?? 0;
+
+        // Calculate max SKS based on IPS using rules from config
+        return $this->calculationService->getMaxSKS($lastIps);
+    }
+
     public function addKelas(Krs $krs, $kelasId)
     {
         return DB::transaction(function () use ($krs, $kelasId) {
             if ($krs->status !== 'draft') {
-                throw new Exception('KRS sudah disubmit/final. Tidak bisa ubah.');
+                throw KrsException::alreadySubmitted();
             }
 
             $kelas = Kelas::with('mataKuliah')->findOrFail($kelasId);
@@ -40,7 +75,7 @@ class KrsService
             // 1. Cek Kapasitas
             $terisi = KrsDetail::where('kelas_id', $kelasId)->count();
             if ($terisi >= $kelas->kapasitas) {
-                throw new Exception("Kelas penuh! Kapasitas: {$kelas->kapasitas}");
+                throw KrsException::classFull($kelas->nama_kelas, $kelas->kapasitas);
             }
 
             // 2. Cek apakah mata kuliah sudah diambil di KRS ini (beda kelas)
@@ -49,21 +84,19 @@ class KrsService
             })->exists();
 
             if ($mkTaken) {
-                throw new Exception("Mata kuliah {$kelas->mataKuliah->nama_mk} sudah diambil.");
+                throw KrsException::courseAlreadyTaken($kelas->mataKuliah->nama_mk);
             }
 
-            // 3. Cek Batas SKS
+            // 3. Cek Batas SKS berdasarkan IPS semester lalu
             $sksSaatIni = $krs->krsDetail->sum(fn($detail) => $detail->kelas->mataKuliah->sks);
             $sksBaru = $kelas->mataKuliah->sks;
             
-            // Hitung jatah SKS (Logic IPS Semester Lalu)
-            // Untuk sederhananya kita ambil default atau logic real
-            // Disini kita ambil max sks dari config 'default' dulu jika IPS tidak ada
-            // TODO: Implement calculation based on IPS logic
-            $maxSks = config('siakad.maks_sks.default', 24); 
+            // Get mahasiswa from KRS and calculate max SKS based on IPS
+            $mahasiswa = $krs->mahasiswa;
+            $maxSks = $this->getMaxSksForMahasiswa($mahasiswa);
 
             if (($sksSaatIni + $sksBaru) > $maxSks) {
-                throw new Exception("Melebihi batas SKS ({$maxSks}). Total SKS akan menjadi: " . ($sksSaatIni + $sksBaru));
+                throw KrsException::sksLimitExceeded($sksSaatIni, $sksBaru, $maxSks);
             }
 
             // Add
@@ -77,7 +110,7 @@ class KrsService
     public function removeKelas(Krs $krs, $detailId)
     {
         if ($krs->status !== 'draft') {
-            throw new Exception('KRS terkunci.');
+            throw KrsException::locked();
         }
 
         $detail = $krs->krsDetail()->findOrFail($detailId);
@@ -87,18 +120,24 @@ class KrsService
     public function submitKrs(Krs $krs)
     {
         if ($krs->krsDetail()->count() === 0) {
-            throw new Exception("KRS kosong tidak dapat diajukan.");
+            throw KrsException::emptyKrs();
         }
         $krs->update(['status' => 'pending']);
     }
 
     public function approveKrs(Krs $krs)
     {
+        if ($krs->status !== 'pending') {
+            throw KrsException::invalidStatus($krs->status, 'pending');
+        }
         $krs->update(['status' => 'approved']);
     }
 
     public function rejectKrs(Krs $krs)
     {
+        if ($krs->status !== 'pending') {
+            throw KrsException::invalidStatus($krs->status, 'pending');
+        }
         $krs->update(['status' => 'rejected']);
     }
 }

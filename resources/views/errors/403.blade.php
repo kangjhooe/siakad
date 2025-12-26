@@ -1,20 +1,75 @@
-@extends('layouts.guest')
-
-@section('content')
-<div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-siakad-900 via-siakad-800 to-siakad-900">
-    <div class="text-center px-6">
-        <h1 class="text-9xl font-bold text-siakad-400">403</h1>
-        <h2 class="text-2xl font-semibold text-white mt-4">Akses Ditolak</h2>
-        <p class="text-siakad-300 mt-2 max-w-md">
-            {{ $exception->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses halaman ini.' }}
-        </p>
-        <a href="{{ url('/dashboard') }}" 
-           class="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-siakad-600 hover:bg-siakad-500 text-white rounded-lg transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>403 - Akses Ditolak</title>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #f8fafc;
+            color: #1B3C53;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            color: #dc2626;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+        p {
+            color: #64748b;
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+        a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #234C6A;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        a:hover {
+            background: #1B3C53;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
-            Kembali ke Dashboard
-        </a>
+        </div>
+        <h1>Akses Ditolak</h1>
+        <p>{{ $message ?? 'Anda tidak memiliki izin untuk mengakses halaman ini.' }}</p>
+        <a href="{{ url('/dashboard') }}">Kembali ke Dashboard</a>
     </div>
-</div>
-@endsection
+</body>
+</html>

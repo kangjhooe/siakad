@@ -11,7 +11,7 @@ class KpController extends Controller
 {
     public function index(Request $request)
     {
-        $query = KerjaPraktek::with(['mahasiswa.user', 'pembimbing.user']);
+        $query = KerjaPraktek::with(['mahasiswa.user', 'mahasiswa.prodi', 'pembimbing.user']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -24,6 +24,12 @@ class KpController extends Controller
                     ->orWhereHas('mahasiswa.user', fn($q) => $q->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('mahasiswa', fn($q) => $q->where('nim', 'like', "%{$search}%"));
             });
+        }
+
+        // Faculty scoping for admin_fakultas
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $query->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
         }
 
         // Sorting
@@ -51,18 +57,30 @@ class KpController extends Controller
         }
 
         $kpList = $query->paginate(20)->withQueryString();
-        $dosenList = Dosen::with('user')->get();
+        
+        // Scope dosen list for dropdown
+        $dosenQuery = Dosen::with('user');
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $dosenQuery->whereHas('prodi', fn($q) => $q->where('fakultas_id', $request->get('fakultas_scope')));
+        }
+        $dosenList = $dosenQuery->get();
         $statusList = KerjaPraktek::getStatusList();
 
+        // Stats - also scoped
+        $statsQuery = KerjaPraktek::query();
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $statsQuery->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $request->get('fakultas_scope')));
+        }
         $stats = [
-            'total' => KerjaPraktek::count(),
-            'aktif' => KerjaPraktek::active()->count(),
-            'perlu_pembimbing' => KerjaPraktek::whereNull('pembimbing_id')->count(),
-            'selesai' => KerjaPraktek::where('status', KerjaPraktek::STATUS_SELESAI)->count(),
+            'total' => (clone $statsQuery)->count(),
+            'aktif' => (clone $statsQuery)->active()->count(),
+            'perlu_pembimbing' => (clone $statsQuery)->whereNull('pembimbing_id')->count(),
+            'selesai' => (clone $statsQuery)->where('status', KerjaPraktek::STATUS_SELESAI)->count(),
         ];
 
         return view('admin.kp.index', compact('kpList', 'dosenList', 'statusList', 'stats'));
     }
+
 
     public function show(KerjaPraktek $kp)
     {

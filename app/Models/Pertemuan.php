@@ -65,4 +65,12 @@ class Pertemuan extends Model
               ->whereHas('krsDetail', fn($q2) => $q2->where('kelas_id', $this->jadwalKuliah->kelas_id));
         })->with('user')->get();
     }
+
+    /**
+     * List of materi for this pertemuan
+     */
+    public function materiList(): HasMany
+    {
+        return $this->hasMany(Materi::class)->orderBy('urutan');
+    }
 }

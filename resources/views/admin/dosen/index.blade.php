@@ -3,20 +3,29 @@
         Data Dosen
     </x-slot>
 
+    @if(session('success'))<div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">{{ session('success') }}</div>@endif
+    @if($errors->any())<div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
+
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <p class="text-sm text-siakad-secondary dark:text-gray-400">Kelola data dosen dalam sistem</p>
         </div>
-        <form method="GET" class="flex items-center gap-3">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NIDN..." class="input-saas px-4 py-2 text-sm w-64 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
-            <select name="prodi" class="input-saas px-4 py-2 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
-                <option value="">Semua Prodi</option>
-                @foreach($prodiList as $p)
-                <option value="{{ $p->id }}" {{ request('prodi') == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
-                @endforeach
-            </select>
-            <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Filter</button>
-        </form>
+        <div class="flex items-center gap-3">
+            <form method="GET" class="flex items-center gap-3">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NIDN..." class="input-saas px-4 py-2 text-sm w-64 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
+                <select name="prodi" class="input-saas px-4 py-2 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
+                    <option value="">Semua Prodi</option>
+                    @foreach($prodiList as $p)
+                    <option value="{{ $p->id }}" {{ request('prodi') == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium">Filter</button>
+            </form>
+            <button onclick="openModal('createModal')" class="btn-primary-saas px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                Tambah
+            </button>
+        </div>
     </div>
 
     <!-- Table Card -->
@@ -91,9 +100,17 @@
                             <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary dark:bg-gray-700 dark:text-gray-300 rounded-full">{{ $d->mahasiswa_bimbingan_count ?? $d->mahasiswaBimbingan->count() }}</span>
                         </td>
                         <td class="py-4 px-5 text-right">
-                            <a href="{{ route('admin.dosen.show', $d) }}" class="inline-flex p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </a>
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{{ route('admin.dosen.show', $d) }}" class="p-2 text-siakad-secondary hover:text-siakad-primary hover:bg-siakad-primary/10 rounded-lg transition" title="Detail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </a>
+                                <button onclick="openEditModal({{ json_encode(['id'=>$d->id,'name'=>$d->user->name,'email'=>$d->user->email,'nidn'=>$d->nidn,'prodi_id'=>$d->prodi_id]) }})" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </button>
+                                <form action="{{ route('admin.dosen.destroy', $d) }}" method="POST" class="inline" onsubmit="return confirm('Yakin?')">@csrf @method('DELETE')
+                                    <button type="submit" class="p-2 text-red-600 hover:bg-red-100 rounded-lg" title="Hapus"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -160,4 +177,58 @@
         {{ $dosen->links() }}
     </div>
     @endif
+
+    <!-- Create Modal -->
+    <div id="createModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50" onclick="closeModal('createModal')"></div>
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white mb-4">Tambah Dosen</h3>
+                <form action="{{ route('admin.dosen.store') }}" method="POST" class="space-y-4">@csrf
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Nama</label><input type="text" name="name" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Email</label><input type="email" name="email" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Password</label><input type="password" name="password" required minlength="8" class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">NIDN</label><input type="text" name="nidn" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Prodi</label>
+                        <select name="prodi_id" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">@foreach($prodiList as $p)<option value="{{ $p->id }}">{{ $p->nama }}</option>@endforeach</select>
+                    </div>
+                    <div class="flex justify-end gap-3"><button type="button" onclick="closeModal('createModal')" class="px-4 py-2 text-sm text-siakad-secondary hover:bg-gray-100 rounded-lg">Batal</button><button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm">Simpan</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50" onclick="closeModal('editModal')"></div>
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
+                <h3 class="text-lg font-semibold text-siakad-dark dark:text-white mb-4">Edit Dosen</h3>
+                <form id="editForm" method="POST" class="space-y-4">@csrf @method('PUT')
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Nama</label><input type="text" name="name" id="editName" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Email</label><input type="email" name="email" id="editEmail" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Password (kosongkan jika tidak diubah)</label><input type="password" name="password" minlength="8" class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">NIDN</label><input type="text" name="nidn" id="editNidn" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                    <div><label class="block text-sm font-medium text-siakad-secondary mb-1">Prodi</label>
+                        <select name="prodi_id" id="editProdiId" required class="input-saas w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">@foreach($prodiList as $p)<option value="{{ $p->id }}">{{ $p->nama }}</option>@endforeach</select>
+                    </div>
+                    <div class="flex justify-end gap-3"><button type="button" onclick="closeModal('editModal')" class="px-4 py-2 text-sm text-siakad-secondary hover:bg-gray-100 rounded-lg">Batal</button><button type="submit" class="btn-primary-saas px-4 py-2 rounded-lg text-sm">Simpan</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openEditModal(d) {
+            document.getElementById('editForm').action = `/admin/dosen/${d.id}`;
+            document.getElementById('editName').value = d.name;
+            document.getElementById('editEmail').value = d.email;
+            document.getElementById('editNidn').value = d.nidn;
+            document.getElementById('editProdiId').value = d.prodi_id;
+            openModal('editModal');
+        }
+    </script>
 </x-app-layout>
+

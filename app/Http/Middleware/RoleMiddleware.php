@@ -23,7 +23,16 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        if (Auth::user()->role !== $role) {
+        $user = Auth::user();
+        
+        // Check if user has the required role
+        $hasAccess = match($role) {
+            'admin' => in_array($user->role, ['superadmin', 'admin_fakultas']),
+            'superadmin' => $user->role === 'superadmin',
+            default => $user->role === $role,
+        };
+
+        if (!$hasAccess) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }

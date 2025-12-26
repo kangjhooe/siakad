@@ -119,10 +119,16 @@ class BimbinganController extends Controller
 
         $krsList = $query->paginate(config('siakad.pagination', 15))->withQueryString();
 
+        // Optimized: Single query for status counts using groupBy
+        $statusCountsRaw = Krs::whereIn('mahasiswa_id', $mahasiswaIds)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         $statusCounts = [
-            'pending' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'pending')->count(),
-            'approved' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'approved')->count(),
-            'rejected' => Krs::whereIn('mahasiswa_id', $mahasiswaIds)->where('status', 'rejected')->count(),
+            'pending' => $statusCountsRaw->get('pending', 0),
+            'approved' => $statusCountsRaw->get('approved', 0),
+            'rejected' => $statusCountsRaw->get('rejected', 0),
         ];
 
         if ($request->ajax()) {

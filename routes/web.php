@@ -31,7 +31,7 @@ Route::get('/dashboard', function () {
     $user = auth()->user();
     
     return match($user->role) {
-        'admin' => redirect()->route('admin.dashboard'),
+        'superadmin', 'admin_fakultas' => redirect()->route('admin.dashboard'),
         'dosen' => redirect()->route('dosen.dashboard'),
         'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
         default => redirect()->route('login'),
@@ -51,7 +51,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // --- ADMIN ROUTES ---
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -83,24 +83,40 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/kelas/{kelas}', [KelasController::class, 'update'])->name('kelas.update');
     Route::delete('/kelas/{kelas}', [KelasController::class, 'destroy'])->name('kelas.destroy');
 
+    // Master Data - Tahun Akademik
+    Route::get('/tahun-akademik', [TahunAkademikController::class, 'index'])->name('tahun-akademik.index');
+    Route::post('/tahun-akademik', [TahunAkademikController::class, 'store'])->name('tahun-akademik.store');
+    Route::put('/tahun-akademik/{tahunAkademik}', [TahunAkademikController::class, 'update'])->name('tahun-akademik.update');
+    Route::delete('/tahun-akademik/{tahunAkademik}', [TahunAkademikController::class, 'destroy'])->name('tahun-akademik.destroy');
     Route::get('/tahun-akademik/active', [TahunAkademikController::class, 'getActive'])->name('tahun-akademik.active');
-    Route::post('/tahun-akademik/{id}/activate', [TahunAkademikController::class, 'activate'])->name('tahun-akademik.activate');
+    Route::post('/tahun-akademik/{tahunAkademik}/activate', [TahunAkademikController::class, 'activate'])->name('tahun-akademik.activate');
 
-    // KRS Approval
+    // User Management
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+
+    // KRS Approval (View Only - no approve/reject actions)
     Route::get('/krs-approval', [KrsApprovalController::class, 'index'])->name('krs-approval.index');
     Route::get('/krs-approval/{krs}', [KrsApprovalController::class, 'show'])->name('krs-approval.show');
-    Route::post('/krs-approval/{krs}/approve', [KrsApprovalController::class, 'approve'])->name('krs-approval.approve');
-    Route::post('/krs-approval/{krs}/reject', [KrsApprovalController::class, 'reject'])->name('krs-approval.reject');
-    Route::post('/krs-approval/bulk-approve', [KrsApprovalController::class, 'bulkApprove'])->name('krs-approval.bulk-approve');
 
     // Mahasiswa Management
     Route::get('/mahasiswa/export', [MahasiswaController::class, 'export'])->name('mahasiswa.export');
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
+    Route::post('/mahasiswa', [MahasiswaController::class, 'store'])->name('mahasiswa.store');
     Route::get('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'show'])->name('mahasiswa.show');
+    Route::put('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'update'])->name('mahasiswa.update');
+    Route::delete('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'destroy'])->name('mahasiswa.destroy');
 
     // Dosen Management
+    Route::get('/dosen/export', [DosenController::class, 'export'])->name('dosen.export');
     Route::get('/dosen', [DosenController::class, 'index'])->name('dosen.index');
+    Route::post('/dosen', [DosenController::class, 'store'])->name('dosen.store');
     Route::get('/dosen/{dosen}', [DosenController::class, 'show'])->name('dosen.show');
+    Route::put('/dosen/{dosen}', [DosenController::class, 'update'])->name('dosen.update');
+    Route::delete('/dosen/{dosen}', [DosenController::class, 'destroy'])->name('dosen.destroy');
 
     // Ruangan Management
     Route::get('/ruangan', [\App\Http\Controllers\Admin\RuanganController::class, 'index'])->name('ruangan.index');
@@ -163,7 +179,7 @@ Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasi
 
     // AI Academic Advisor
     Route::get('/ai-advisor', [\App\Http\Controllers\Mahasiswa\AiAdvisorController::class, 'index'])->name('ai-advisor.index');
-    Route::post('/ai-advisor/chat', [\App\Http\Controllers\Mahasiswa\AiAdvisorController::class, 'chat'])->name('ai-advisor.chat');
+    Route::post('/ai-advisor/chat', [\App\Http\Controllers\Mahasiswa\AiAdvisorController::class, 'chat'])->middleware('throttle:ai-chat')->name('ai-advisor.chat');
 
     // Skripsi
     Route::get('/skripsi', [\App\Http\Controllers\Mahasiswa\SkripsiController::class, 'index'])->name('skripsi.index');
@@ -176,6 +192,19 @@ Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasi
     Route::get('/kp/create', [\App\Http\Controllers\Mahasiswa\KpController::class, 'create'])->name('kp.create');
     Route::post('/kp', [\App\Http\Controllers\Mahasiswa\KpController::class, 'store'])->name('kp.store');
     Route::post('/kp/logbook', [\App\Http\Controllers\Mahasiswa\KpController::class, 'storeLogbook'])->name('kp.logbook.store');
+
+    // E-Learning (LMS)
+    Route::get('/lms', [\App\Http\Controllers\Mahasiswa\LmsController::class, 'index'])->name('lms.index');
+
+    // Materi Kuliah
+    Route::get('/materi/{kelas}', [\App\Http\Controllers\Mahasiswa\MateriController::class, 'index'])->name('materi.index');
+    Route::get('/materi/{kelas}/download/{materi}', [\App\Http\Controllers\Mahasiswa\MateriController::class, 'download'])->name('materi.download');
+
+    // Tugas
+    Route::get('/tugas/{kelas}', [\App\Http\Controllers\Mahasiswa\TugasController::class, 'index'])->name('tugas.index');
+    Route::get('/tugas/{kelas}/{tugas}', [\App\Http\Controllers\Mahasiswa\TugasController::class, 'show'])->name('tugas.show');
+    Route::post('/tugas/{kelas}/{tugas}/submit', [\App\Http\Controllers\Mahasiswa\TugasController::class, 'submit'])->name('tugas.submit');
+    Route::get('/tugas/{kelas}/{tugas}/download', [\App\Http\Controllers\Mahasiswa\TugasController::class, 'download'])->name('tugas.download');
 });
 
 // --- DOSEN ROUTES ---
@@ -183,7 +212,8 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Dosen\DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/penilaian', [PenilaianController::class, 'index'])->name('penilaian.index');
+    // E-Learning (LMS)
+    Route::get('/lms', [\App\Http\Controllers\Dosen\LmsController::class, 'index'])->name('lms.index');
 
     // Bimbingan (Dosen PA)
     Route::get('/bimbingan', [\App\Http\Controllers\Dosen\BimbinganController::class, 'index'])->name('bimbingan.index');
@@ -220,6 +250,22 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::get('/penilaian', [\App\Http\Controllers\Dosen\PenilaianController::class, 'index'])->name('penilaian.index');
     Route::get('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'show'])->name('penilaian.show');
     Route::post('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'store'])->middleware('throttle:penilaian')->name('penilaian.store');
+
+    // Materi Kuliah
+    Route::get('/materi/{kelas}', [\App\Http\Controllers\Dosen\MateriController::class, 'index'])->name('materi.index');
+    Route::post('/materi/{kelas}', [\App\Http\Controllers\Dosen\MateriController::class, 'store'])->name('materi.store');
+    Route::put('/materi/{kelas}/{materi}', [\App\Http\Controllers\Dosen\MateriController::class, 'update'])->name('materi.update');
+    Route::delete('/materi/{kelas}/{materi}', [\App\Http\Controllers\Dosen\MateriController::class, 'destroy'])->name('materi.destroy');
+    Route::get('/materi/{kelas}/download/{materi}', [\App\Http\Controllers\Dosen\MateriController::class, 'download'])->name('materi.download');
+
+    // Tugas
+    Route::get('/tugas/{kelas}', [\App\Http\Controllers\Dosen\TugasController::class, 'index'])->name('tugas.index');
+    Route::post('/tugas/{kelas}', [\App\Http\Controllers\Dosen\TugasController::class, 'store'])->name('tugas.store');
+    Route::get('/tugas/{kelas}/{tugas}', [\App\Http\Controllers\Dosen\TugasController::class, 'show'])->name('tugas.show');
+    Route::post('/tugas/{kelas}/submission/{submission}/grade', [\App\Http\Controllers\Dosen\TugasController::class, 'grade'])->name('tugas.grade');
+    Route::post('/tugas/{kelas}/{tugas}/toggle', [\App\Http\Controllers\Dosen\TugasController::class, 'toggle'])->name('tugas.toggle');
+    Route::delete('/tugas/{kelas}/{tugas}', [\App\Http\Controllers\Dosen\TugasController::class, 'destroy'])->name('tugas.destroy');
+    Route::get('/tugas/{kelas}/submission/{submission}/download', [\App\Http\Controllers\Dosen\TugasController::class, 'downloadSubmission'])->name('tugas.submission.download');
 });
 
 require __DIR__.'/auth.php';

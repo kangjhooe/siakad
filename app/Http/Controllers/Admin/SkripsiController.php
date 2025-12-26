@@ -11,7 +11,7 @@ class SkripsiController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Skripsi::with(['mahasiswa.user', 'pembimbing1.user', 'pembimbing2.user']);
+        $query = Skripsi::with(['mahasiswa.user', 'mahasiswa.prodi', 'pembimbing1.user', 'pembimbing2.user']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -26,6 +26,12 @@ class SkripsiController extends Controller
                     ->orWhereHas('mahasiswa.user', fn($q) => $q->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('mahasiswa', fn($q) => $q->where('nim', 'like', "%{$search}%"));
             });
+        }
+
+        // Faculty scoping for admin_fakultas
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $fakultasId = $request->get('fakultas_scope');
+            $query->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $fakultasId));
         }
 
         // Sorting
@@ -53,19 +59,30 @@ class SkripsiController extends Controller
         }
 
         $skripsiList = $query->paginate(20)->withQueryString();
-        $dosenList = Dosen::with('user')->get();
+        
+        // Scope dosen list for dropdown
+        $dosenQuery = Dosen::with('user');
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $dosenQuery->whereHas('prodi', fn($q) => $q->where('fakultas_id', $request->get('fakultas_scope')));
+        }
+        $dosenList = $dosenQuery->get();
         $statusList = Skripsi::getStatusList();
 
-        // Stats
+        // Stats - also scoped
+        $statsQuery = Skripsi::query();
+        if ($request->get('fakultas_scoped') && $request->get('fakultas_scope')) {
+            $statsQuery->whereHas('mahasiswa.prodi', fn($q) => $q->where('fakultas_id', $request->get('fakultas_scope')));
+        }
         $stats = [
-            'total' => Skripsi::count(),
-            'aktif' => Skripsi::active()->count(),
-            'menunggu_pembimbing' => Skripsi::whereNull('pembimbing1_id')->count(),
-            'selesai' => Skripsi::where('status', Skripsi::STATUS_SELESAI)->count(),
+            'total' => (clone $statsQuery)->count(),
+            'aktif' => (clone $statsQuery)->active()->count(),
+            'menunggu_pembimbing' => (clone $statsQuery)->whereNull('pembimbing1_id')->count(),
+            'selesai' => (clone $statsQuery)->where('status', Skripsi::STATUS_SELESAI)->count(),
         ];
 
         return view('admin.skripsi.index', compact('skripsiList', 'dosenList', 'statusList', 'stats'));
     }
+
 
     public function show(Skripsi $skripsi)
     {
