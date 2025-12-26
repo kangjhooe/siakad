@@ -265,12 +265,12 @@ return [
 
 After running seeders, you can login with:
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Superadmin** | `superadmin@siakad.test` | `password` |
-| **Admin Fakultas** | `admin.fti@siakad.test` | `password` |
-| **Dosen** | `dosen1@siakad.test` | `password` |
-| **Mahasiswa** | `mahasiswa1@siakad.test` | `password` |
+| Role | Email | Password | Description |
+|------|-------|----------|-------------|
+| **Superadmin** | `superadmin@siakad.test` | `password` | Full system access |
+| **Admin Fakultas** | `admin.ftik@siakad.test` | `password` | Faculty-scoped admin |
+| **Dosen** | `dosen@siakad.test` | `password` | Dr. Ahmad Fauzi, M.Kom. |
+| **Mahasiswa** | `mahasiswa@siakad.test` | `password` | Budi Santoso (Semester 5, NIM: 2022101001) |
 
 > ⚠️ **Important**: Change these passwords immediately in production!
 
