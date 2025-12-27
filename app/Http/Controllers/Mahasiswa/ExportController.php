@@ -88,4 +88,42 @@ class ExportController extends Controller
 
         return view('mahasiswa.export.khs', compact('mahasiswa', 'tahunAkademik', 'nilaiList', 'ipsData', 'ipkData'));
     }
+
+    /**
+     * Export KRS as printable HTML (PDF-ready)
+     */
+    public function krs()
+    {
+        $user = Auth::user();
+        $mahasiswa = $user->mahasiswa;
+        
+        if (!$mahasiswa) {
+            abort(403, 'Unauthorized');
+        }
+
+        $mahasiswa->load(['prodi.fakultas', 'dosenPa.user']);
+
+        // Get active tahun akademik
+        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+        
+        if (!$tahunAktif) {
+            return redirect()->route('mahasiswa.krs.index')->with('error', 'Tidak ada tahun akademik yang aktif.');
+        }
+
+        // Get KRS for active tahun akademik (can be pending or approved, but not draft)
+        $krs = Krs::where('mahasiswa_id', $mahasiswa->id)
+            ->where('tahun_akademik_id', $tahunAktif->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->with(['tahunAkademik', 'krsDetail.kelas.mataKuliah', 'krsDetail.kelas.dosen.user'])
+            ->first();
+
+        if (!$krs) {
+            return redirect()->route('mahasiswa.krs.index')->with('error', 'KRS untuk semester ini belum diajukan atau belum disetujui. Hanya KRS yang sudah diajukan atau disetujui yang dapat dicetak.');
+        }
+
+        // Calculate total SKS
+        $totalSks = $krs->krsDetail->sum(fn($detail) => $detail->kelas->mataKuliah->sks ?? 0);
+
+        return view('mahasiswa.export.krs', compact('mahasiswa', 'krs', 'totalSks'));
+    }
 }

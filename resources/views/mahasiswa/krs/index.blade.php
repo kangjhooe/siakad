@@ -37,7 +37,10 @@
             <div class="mt-5 pt-5 border-t border-white/20">
                 <form action="{{ url('mahasiswa/krs/submit') }}" method="POST" class="flex items-center justify-between">
                     @csrf
-                    <p class="text-sm opacity-80">Setelah diajukan, KRS tidak dapat diubah lagi.</p>
+                    <div>
+                        <p class="text-sm opacity-80">Setelah diajukan, KRS tidak dapat diubah lagi.</p>
+                        <p class="text-xs opacity-60 mt-1">Anda dapat mencetak KRS setelah status berubah menjadi "Pending" atau "Approved".</p>
+                    </div>
                     <button type="submit" onclick="return confirm('Yakin ingin mengajukan KRS? Anda tidak dapat mengubah lagi setelah ini.')"
                         class="px-5 py-2 bg-white text-siakad-primary rounded-lg font-semibold text-sm hover:bg-siakad-light transition">
                         Ajukan KRS
@@ -62,11 +65,23 @@
             </div>
             @elseif($krs->status == 'pending')
             <div class="mt-5 pt-5 border-t border-white/20">
-                <p class="text-sm opacity-80">⏳ KRS Anda sedang menunggu persetujuan dari Dosen PA.</p>
+                <div class="flex items-center justify-between">
+                    <p class="text-sm opacity-80">⏳ KRS Anda sedang menunggu persetujuan dari Dosen PA.</p>
+                    <a href="{{ route('mahasiswa.export.krs') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-siakad-primary rounded-lg font-semibold text-sm hover:bg-siakad-light transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Cetak KRS
+                    </a>
+                </div>
             </div>
             @elseif($krs->status == 'approved')
             <div class="mt-5 pt-5 border-t border-white/20">
-                <p class="text-sm opacity-80">✅ KRS Anda telah disetujui oleh Dosen PA.</p>
+                <div class="flex items-center justify-between">
+                    <p class="text-sm opacity-80">✅ KRS Anda telah disetujui oleh Dosen PA.</p>
+                    <a href="{{ route('mahasiswa.export.krs') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-siakad-primary rounded-lg font-semibold text-sm hover:bg-siakad-light transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Cetak KRS
+                    </a>
+                </div>
             </div>
             @endif
         </div>
@@ -76,9 +91,17 @@
         <!-- Taken Classes -->
         <div class="{{ $krs->status == 'draft' ? 'lg:col-span-2' : 'lg:col-span-3' }}">
             <div class="card-saas overflow-hidden">
-                <div class="px-6 py-4 border-b border-siakad-light">
-                    <h3 class="font-semibold text-siakad-dark">Mata Kuliah Diambil</h3>
-                    <p class="text-xs text-siakad-secondary mt-1">{{ $krs->krsDetail->count() }} mata kuliah dipilih</p>
+                <div class="px-6 py-4 border-b border-siakad-light flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-siakad-dark">Mata Kuliah Diambil</h3>
+                        <p class="text-xs text-siakad-secondary mt-1">{{ $krs->krsDetail->count() }} mata kuliah dipilih</p>
+                    </div>
+                    @if(in_array($krs->status, ['pending', 'approved']))
+                    <a href="{{ route('mahasiswa.export.krs') }}" class="inline-flex items-center gap-2 px-3 py-1.5 bg-siakad-primary/10 text-siakad-primary rounded-lg text-sm font-medium hover:bg-siakad-primary/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export PDF
+                    </a>
+                    @endif
                 </div>
                 
                 <div class="divide-y divide-siakad-light/50">

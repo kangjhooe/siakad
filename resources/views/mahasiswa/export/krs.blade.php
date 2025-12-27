@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRS {{ $krs->tahunAkademik->tahun }} Semester {{ $krs->tahunAkademik->semester }} - {{ $mahasiswa->nim }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.4; padding: 20mm; background: white; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 3px double #000; padding-bottom: 15px; }
+        .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
+        .header h2 { font-size: 14pt; font-weight: normal; margin-bottom: 5px; }
+        .header p { font-size: 10pt; color: #333; }
+        .title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { text-align: center; font-size: 12pt; margin-bottom: 20px; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10pt; font-weight: bold; margin-left: 10px; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .info-table { width: 100%; margin-bottom: 20px; }
+        .info-table td { padding: 3px 0; vertical-align: top; }
+        .info-table .label { width: 150px; }
+        .info-table .separator { width: 20px; text-align: center; }
+        table.mata-kuliah { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table.mata-kuliah th, table.mata-kuliah td { border: 1px solid #000; padding: 6px 8px; }
+        table.mata-kuliah th { background: #f0f0f0; font-weight: bold; text-align: center; }
+        table.mata-kuliah td.center { text-align: center; }
+        table.mata-kuliah td.right { text-align: right; }
+        table.mata-kuliah tfoot td { font-weight: bold; background: #f9f9f9; }
+        .summary { margin-top: 20px; display: flex; gap: 20px; }
+        .summary-box { flex: 1; text-align: center; padding: 15px; border: 2px solid #000; }
+        .summary-box .value { font-size: 28pt; font-weight: bold; }
+        .summary-box .label { font-size: 10pt; color: #666; text-transform: uppercase; }
+        .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+        .footer .signature { text-align: center; width: 200px; }
+        .footer .signature .line { border-top: 1px solid #000; margin-top: 60px; padding-top: 5px; }
+        .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); z-index: 1000; }
+        .print-btn:hover { background: #4338ca; box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); }
+        @media print {
+            body { padding: 10mm; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">
+        🖨️ Cetak / Simpan sebagai PDF
+    </button>
+
+    <div class="header">
+        <h1>KULIM UNIVERSITY</h1>
+        <h2>{{ $mahasiswa->prodi->fakultas->nama_fakultas ?? 'FAKULTAS' }}</h2>
+        <p>Jl. Bukit Barisan No. 01 | Telp: 08123456789</p>
+    </div>
+
+    <div class="title">Kartu Rencana Studi (KRS)</div>
+    <div class="subtitle">
+        Tahun Akademik {{ $krs->tahunAkademik->tahun }} - Semester {{ $krs->tahunAkademik->semester }}
+        <span class="status-badge {{ $krs->status == 'approved' ? 'status-approved' : 'status-pending' }}">
+            {{ strtoupper($krs->status == 'approved' ? 'DISETUJUI' : 'MENUNGGU PERSETUJUAN') }}
+        </span>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">Nama Mahasiswa</td>
+            <td class="separator">:</td>
+            <td><strong>{{ $mahasiswa->user->name }}</strong></td>
+            <td class="label">Program Studi</td>
+            <td class="separator">:</td>
+            <td>{{ $mahasiswa->prodi->nama_prodi ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">NIM</td>
+            <td class="separator">:</td>
+            <td><strong>{{ $mahasiswa->nim }}</strong></td>
+            <td class="label">Fakultas</td>
+            <td class="separator">:</td>
+            <td>{{ $mahasiswa->prodi->fakultas->nama_fakultas ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tanggal Cetak</td>
+            <td class="separator">:</td>
+            <td>{{ now()->format('d F Y') }}</td>
+            <td class="label">Dosen PA</td>
+            <td class="separator">:</td>
+            <td>{{ $mahasiswa->dosenPa->user->name ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <table class="mata-kuliah">
+        <thead>
+            <tr>
+                <th style="width: 40px;">No</th>
+                <th style="width: 80px;">Kode MK</th>
+                <th>Nama Mata Kuliah</th>
+                <th style="width: 80px;">Kelas</th>
+                <th>Dosen Pengajar</th>
+                <th style="width: 50px;">SKS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $totalSks = 0; @endphp
+            @forelse($krs->krsDetail->sortBy('kelas.mataKuliah.kode_mk') as $index => $detail)
+            @php
+                $mk = $detail->kelas->mataKuliah;
+                $totalSks += $mk->sks ?? 0;
+            @endphp
+            <tr>
+                <td class="center">{{ $index + 1 }}</td>
+                <td class="center">{{ $mk->kode_mk ?? '-' }}</td>
+                <td>{{ $mk->nama_mk ?? '-' }}</td>
+                <td class="center">{{ $detail->kelas->nama_kelas ?? '-' }}</td>
+                <td>{{ $detail->kelas->dosen->user->name ?? '-' }}</td>
+                <td class="center">{{ $mk->sks ?? 0 }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="center">Belum ada mata kuliah yang diambil</td>
+            </tr>
+            @endforelse
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="right">Total SKS</td>
+                <td class="center"><strong>{{ $totalSks }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="summary">
+        <div class="summary-box">
+            <div class="value">{{ $totalSks }}</div>
+            <div class="label">Total SKS</div>
+        </div>
+        <div class="summary-box">
+            <div class="value">{{ $krs->krsDetail->count() }}</div>
+            <div class="label">Jumlah Mata Kuliah</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="signature">
+            Mengetahui,<br>
+            Dosen Pembimbing Akademik
+            <div class="line">
+                <strong>{{ $mahasiswa->dosenPa->user->name ?? '_______________________' }}</strong><br>
+                NIP. ___________________
+            </div>
+        </div>
+        <div class="signature">
+            Kota Akademik, {{ now()->format('d F Y') }}<br>
+            Ketua Program Studi
+            <div class="line">
+                <strong>_______________________</strong><br>
+                NIP. ___________________
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
