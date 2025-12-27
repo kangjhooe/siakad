@@ -58,6 +58,10 @@ Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->na
     // Users
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 
+    // Master Data - Profil Perguruan Tinggi (Superadmin only)
+    Route::get('/perguruan-tinggi', [\App\Http\Controllers\Admin\PerguruanTinggiController::class, 'index'])->name('perguruan-tinggi.index');
+    Route::put('/perguruan-tinggi', [\App\Http\Controllers\Admin\PerguruanTinggiController::class, 'update'])->name('perguruan-tinggi.update');
+
     // Master Data - Fakultas
     Route::get('/fakultas', [FakultasController::class, 'index'])->name('fakultas.index');
     Route::post('/fakultas', [FakultasController::class, 'store'])->name('fakultas.store');

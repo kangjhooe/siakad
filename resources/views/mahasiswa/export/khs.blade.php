@@ -7,7 +7,10 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.4; padding: 20mm; background: white; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 3px double #000; padding-bottom: 15px; }
+        .header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; border-bottom: 3px double #000; padding-bottom: 15px; }
+        .header-logo { flex-shrink: 0; }
+        .header-logo img { max-width: 80px; max-height: 80px; object-fit: contain; }
+        .header-content { flex: 1; text-align: center; }
         .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
         .header h2 { font-size: 14pt; font-weight: normal; margin-bottom: 5px; }
         .header p { font-size: 10pt; color: #333; }
@@ -41,10 +44,44 @@
 <body>
     <button class="print-btn" onclick="window.print()">🖨️ Cetak / PDF</button>
 
+    @php
+        $pt = \App\Models\PerguruanTinggi::getInstance();
+        $hasLogo = $pt->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($pt->logo_path);
+        $logoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::url($pt->logo_path) : null;
+        
+        // Ensure relationships are loaded
+        $mahasiswa->loadMissing(['prodi.fakultas']);
+        
+        $namaFakultas = $mahasiswa->prodi && $mahasiswa->prodi->fakultas 
+            ? $mahasiswa->prodi->fakultas->nama 
+            : 'FAKULTAS';
+        
+        $namaProdi = $mahasiswa->prodi 
+            ? $mahasiswa->prodi->nama 
+            : 'PROGRAM STUDI';
+    @endphp
     <div class="header">
-        <h1>KULIM UNIVERSITY</h1>
-        <h2>{{ $mahasiswa->prodi->fakultas->nama_fakultas ?? 'FAKULTAS' }}</h2>
-        <p>Jl. Bukit Barisan No. 01 | Telp: 08123456789</p>
+        @if($hasLogo)
+        <div class="header-logo">
+            <img src="{{ $logoUrl }}" alt="Logo" style="max-width: 80px; max-height: 80px; object-fit: contain;">
+        </div>
+        @endif
+        <div class="header-content">
+            <h1>{{ $pt->nama }}</h1>
+            <h2>{{ $namaFakultas }}</h2>
+            <h3 style="font-size: 12pt; font-weight: normal; margin-bottom: 5px;">{{ $namaProdi }}</h3>
+            <p style="font-size: 10pt; color: #333; margin-top: 5px;">
+                @if($pt->alamat){{ $pt->alamat }}@endif
+                @if($pt->kota){{ $pt->alamat ? ', ' : '' }}{{ $pt->kota }}@endif
+                @if($pt->provinsi){{ ($pt->alamat || $pt->kota) ? ', ' : '' }}{{ $pt->provinsi }}@endif
+                @if($pt->telepon) | Telp: {{ $pt->telepon }}@endif
+            </p>
+        </div>
+        @if($hasLogo)
+        <div class="header-logo" style="visibility: hidden; width: 80px;">
+            <img src="{{ $logoUrl }}" alt="Logo" style="max-width: 80px; max-height: 80px;">
+        </div>
+        @endif
     </div>
 
     <div class="title">Kartu Hasil Studi (KHS)</div>
@@ -57,7 +94,7 @@
             <td><strong>{{ $mahasiswa->user->name }}</strong></td>
             <td class="label">Program Studi</td>
             <td class="separator">:</td>
-            <td>{{ $mahasiswa->prodi->nama_prodi ?? '-' }}</td>
+            <td>{{ $mahasiswa->prodi->nama ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label">NIM</td>
@@ -65,7 +102,7 @@
             <td><strong>{{ $mahasiswa->nim }}</strong></td>
             <td class="label">Fakultas</td>
             <td class="separator">:</td>
-            <td>{{ $mahasiswa->prodi->fakultas->nama_fakultas ?? '-' }}</td>
+            <td>{{ $mahasiswa->prodi->fakultas->nama ?? $mahasiswa->prodi->fakultas->nama_fakultas ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label">Tanggal Cetak</td>

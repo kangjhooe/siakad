@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Krs;
+use App\Models\Mahasiswa;
 use App\Models\Nilai;
 use App\Models\TahunAkademik;
 use App\Services\AkademikCalculationService;
@@ -30,7 +31,9 @@ class ExportController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $mahasiswa->load(['prodi.fakultas', 'dosenPa.user']);
+        // Reload with all necessary relationships
+        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'dosenPa.user', 'user'])
+            ->findOrFail($mahasiswa->id);
 
         // Get all nilai
         $nilaiList = Nilai::where('mahasiswa_id', $mahasiswa->id)
@@ -59,7 +62,9 @@ class ExportController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $mahasiswa->load(['prodi.fakultas', 'dosenPa.user']);
+        // Reload with all necessary relationships
+        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'dosenPa.user', 'user'])
+            ->findOrFail($mahasiswa->id);
 
         // Check if student has approved KRS for this semester
         $krs = Krs::where('mahasiswa_id', $mahasiswa->id)
@@ -101,7 +106,9 @@ class ExportController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $mahasiswa->load(['prodi.fakultas', 'dosenPa.user']);
+        // Reload with all necessary relationships
+        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'dosenPa.user', 'user'])
+            ->findOrFail($mahasiswa->id);
 
         // Get active tahun akademik
         $tahunAktif = TahunAkademik::where('is_active', true)->first();
