@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Dosen;
 use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Services\AkademikService;
@@ -45,7 +46,8 @@ class ProdiController extends Controller
         $user = auth()->user();
         
         $query = Fakultas::with(['prodi' => function($q) {
-            $q->withCount(['mahasiswa', 'dosen']);
+            $q->withCount(['mahasiswa', 'dosen'])
+              ->with('kepalaProdi.user');
         }]);
         
         // Scope to user's fakultas if not superadmin
@@ -56,7 +58,17 @@ class ProdiController extends Controller
         $fakultas = $query->get();
         $isSuperAdmin = $user->isSuperAdmin();
         
-        return view('admin.prodi.index', compact('fakultas', 'isSuperAdmin'));
+        // Get all dosen for dropdown (scoped by accessible fakultas)
+        $dosenQuery = Dosen::with(['user', 'prodi'])
+            ->join('users', 'dosen.user_id', '=', 'users.id')
+            ->select('dosen.*')
+            ->orderBy('users.name');
+        if (!$user->isSuperAdmin() && $user->fakultas_id) {
+            $dosenQuery->whereHas('prodi', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+        $dosenList = $dosenQuery->get();
+        
+        return view('admin.prodi.index', compact('fakultas', 'isSuperAdmin', 'dosenList'));
     }
 
     public function store(Request $request)
@@ -64,12 +76,21 @@ class ProdiController extends Controller
         $validated = $request->validate([
             'fakultas_id' => 'required|exists:fakultas,id',
             'nama'        => 'required|string|max:255',
+            'kepala_prodi_id' => 'nullable|exists:dosen,id',
         ]);
         
         // Check if user can create prodi in this fakultas
         $user = auth()->user();
         if (!$user->isSuperAdmin() && $user->fakultas_id != $validated['fakultas_id']) {
             abort(response()->view('errors.403', ['message' => 'Anda tidak dapat menambah prodi di fakultas ini.'], 403));
+        }
+        
+        // Validate kepala_prodi_id belongs to the same fakultas
+        if (isset($validated['kepala_prodi_id'])) {
+            $dosen = Dosen::with('prodi')->findOrFail($validated['kepala_prodi_id']);
+            if (!$user->isSuperAdmin() && $dosen->prodi->fakultas_id != $validated['fakultas_id']) {
+                abort(response()->view('errors.403', ['message' => 'Dosen yang dipilih tidak berada di fakultas yang sama.'], 403));
+            }
         }
         
         $this->akademikService->createProdi($validated);
@@ -83,12 +104,21 @@ class ProdiController extends Controller
         $validated = $request->validate([
             'fakultas_id' => 'required|exists:fakultas,id',
             'nama'        => 'required|string|max:255',
+            'kepala_prodi_id' => 'nullable|exists:dosen,id',
         ]);
         
         // Check if user can move prodi to target fakultas
         $user = auth()->user();
         if (!$user->isSuperAdmin() && $user->fakultas_id != $validated['fakultas_id']) {
             abort(response()->view('errors.403', ['message' => 'Anda tidak dapat memindahkan prodi ke fakultas lain.'], 403));
+        }
+        
+        // Validate kepala_prodi_id belongs to the same fakultas
+        if (isset($validated['kepala_prodi_id'])) {
+            $dosen = Dosen::with('prodi')->findOrFail($validated['kepala_prodi_id']);
+            if (!$user->isSuperAdmin() && $dosen->prodi->fakultas_id != $validated['fakultas_id']) {
+                abort(response()->view('errors.403', ['message' => 'Dosen yang dipilih tidak berada di fakultas yang sama.'], 403));
+            }
         }
         
         $prodi->update($validated);

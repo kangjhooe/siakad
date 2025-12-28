@@ -60,6 +60,7 @@
                     <tr class="bg-siakad-light/30 dark:bg-gray-900">
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-16">#</th>
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Nama Program Studi</th>
+                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-48">Kepala Prodi</th>
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-32">Mahasiswa</th>
                         <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-24">Dosen</th>
                         <th class="text-right py-3 px-5 text-xs font-semibold text-siakad-secondary dark:text-gray-400 uppercase tracking-wider w-32">Aksi</th>
@@ -75,6 +76,14 @@
                             </div>
                         </td>
                         <td class="py-4 px-5">
+                            @if($p->kepalaProdi && $p->kepalaProdi->user)
+                                <span class="text-sm text-siakad-dark dark:text-white">{{ $p->kepalaProdi->user->name }}</span>
+                                <span class="text-xs text-siakad-secondary dark:text-gray-400 block">NIDN: {{ $p->kepalaProdi->nidn }}</span>
+                            @else
+                                <span class="text-sm text-siakad-secondary dark:text-gray-400 italic">Belum ditetapkan</span>
+                            @endif
+                        </td>
+                        <td class="py-4 px-5">
                             <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-primary/10 text-siakad-primary dark:bg-blue-900/50 dark:text-blue-400 rounded-full">{{ $p->mahasiswa_count ?? 0 }}</span>
                         </td>
                         <td class="py-4 px-5">
@@ -82,7 +91,7 @@
                         </td>
                         <td class="py-4 px-5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <button onclick="editProdi({{ $p->id }}, '{{ $p->nama }}', {{ $f->id }})" class="p-2 text-siakad-secondary dark:text-gray-400 hover:text-siakad-primary dark:hover:text-blue-400 hover:bg-siakad-primary/10 dark:hover:bg-gray-700 rounded-lg transition">
+                                <button onclick="editProdi({{ $p->id }}, '{{ addslashes($p->nama) }}', {{ $f->id }}, {{ $p->kepala_prodi_id ?? 'null' }})" class="p-2 text-siakad-secondary dark:text-gray-400 hover:text-siakad-primary dark:hover:text-blue-400 hover:bg-siakad-primary/10 dark:hover:bg-gray-700 rounded-lg transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
                                 <form action="{{ route('admin.prodi.destroy', $p) }}" method="POST" onsubmit="return confirm('Hapus prodi ini?')">
@@ -96,7 +105,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="py-8 text-center text-siakad-secondary dark:text-gray-400 text-sm">
+                        <td colspan="6" class="py-8 text-center text-siakad-secondary dark:text-gray-400 text-sm">
                             Belum ada program studi di fakultas ini
                         </td>
                     </tr>
@@ -112,6 +121,14 @@
                         <h4 class="font-bold text-siakad-dark dark:text-white">{{ $p->nama }}</h4>
                     </div>
 
+                    @if($p->kepalaProdi && $p->kepalaProdi->user)
+                    <div class="mb-3 p-2 bg-siakad-primary/5 dark:bg-gray-700/50 rounded-lg">
+                        <span class="block text-[10px] text-siakad-secondary dark:text-gray-400 uppercase tracking-wider mb-1">Kepala Prodi</span>
+                        <span class="text-sm font-medium text-siakad-dark dark:text-white">{{ $p->kepalaProdi->user->name }}</span>
+                        <span class="text-xs text-siakad-secondary dark:text-gray-400">NIDN: {{ $p->kepalaProdi->nidn }}</span>
+                    </div>
+                    @endif
+
                     <div class="grid grid-cols-2 gap-3 mb-4">
                         <div class="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg text-center">
                             <span class="block text-[10px] text-siakad-secondary dark:text-gray-400 uppercase tracking-wider">Mahasiswa</span>
@@ -124,7 +141,7 @@
                     </div>
 
                     <div class="flex items-center gap-2 pt-3 border-t border-siakad-light dark:border-gray-700">
-                        <button onclick="editProdi({{ $p->id }}, '{{ $p->nama }}', {{ $f->id }})" class="flex-1 py-2 text-sm font-medium text-siakad-secondary bg-siakad-light/50 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-siakad-light hover:text-siakad-primary dark:hover:bg-gray-600 transition text-center">
+                        <button onclick="editProdi({{ $p->id }}, '{{ addslashes($p->nama) }}', {{ $f->id }}, {{ $p->kepala_prodi_id ?? 'null' }})" class="flex-1 py-2 text-sm font-medium text-siakad-secondary bg-siakad-light/50 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-siakad-light hover:text-siakad-primary dark:hover:bg-gray-600 transition text-center">
                             Edit
                         </button>
                         <form action="{{ route('admin.prodi.destroy', $p) }}" method="POST" onsubmit="return confirm('Hapus prodi ini?')" class="flex-1">
@@ -177,6 +194,18 @@
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Prodi</label>
                         <input type="text" name="nama" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Masukkan nama prodi" required>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kepala Prodi</label>
+                        <select name="kepala_prodi_id" id="createKepalaProdi" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Pilih Kepala Prodi (Opsional)</option>
+                            @foreach($dosenList as $dosen)
+                            <option value="{{ $dosen->id }}" data-fakultas="{{ $dosen->prodi->fakultas_id ?? '' }}">
+                                {{ $dosen->user->name }} ({{ $dosen->nidn }}) - {{ $dosen->prodi->nama ?? '' }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-siakad-secondary dark:text-gray-400 mt-1">Pilih dosen yang akan diangkat sebagai kepala prodi</p>
+                    </div>
                 </div>
                 <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
                     <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
@@ -207,6 +236,18 @@
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Nama Prodi</label>
                         <input type="text" name="nama" id="editNama" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Kepala Prodi</label>
+                        <select name="kepala_prodi_id" id="editKepalaProdi" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Pilih Kepala Prodi (Opsional)</option>
+                            @foreach($dosenList as $dosen)
+                            <option value="{{ $dosen->id }}" data-fakultas="{{ $dosen->prodi->fakultas_id ?? '' }}">
+                                {{ $dosen->user->name }} ({{ $dosen->nidn }}) - {{ $dosen->prodi->nama ?? '' }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-siakad-secondary dark:text-gray-400 mt-1">Pilih dosen yang akan diangkat sebagai kepala prodi</p>
+                    </div>
                 </div>
                 <div class="px-6 py-4 border-t border-siakad-light dark:border-gray-700 flex items-center justify-end gap-3">
                     <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm font-medium dark:text-white">Batal</button>
@@ -217,10 +258,57 @@
     </div>
 
     <script>
-        function editProdi(id, nama, fakultasId) {
+        // Filter dosen by fakultas when fakultas is selected
+        function filterDosenByFakultas(selectElement, targetSelectId) {
+            const fakultasId = selectElement.value;
+            const targetSelect = document.getElementById(targetSelectId);
+            const options = targetSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                } else {
+                    const optionFakultasId = option.getAttribute('data-fakultas');
+                    option.style.display = (optionFakultasId === fakultasId) ? '' : 'none';
+                }
+            });
+            
+            // Reset selection if current selection is hidden
+            if (targetSelect.value && targetSelect.options[targetSelect.selectedIndex].style.display === 'none') {
+                targetSelect.value = '';
+            }
+        }
+
+        // Initialize fakultas change handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const createFakultas = document.querySelector('select[name="fakultas_id"]');
+            if (createFakultas) {
+                createFakultas.addEventListener('change', function() {
+                    filterDosenByFakultas(this, 'createKepalaProdi');
+                });
+            }
+
+            const editFakultas = document.getElementById('editFakultas');
+            if (editFakultas) {
+                editFakultas.addEventListener('change', function() {
+                    filterDosenByFakultas(this, 'editKepalaProdi');
+                });
+            }
+        });
+
+        function editProdi(id, nama, fakultasId, kepalaProdiId = null) {
             document.getElementById('editForm').action = `/admin/prodi/${id}`;
             document.getElementById('editNama').value = nama;
             document.getElementById('editFakultas').value = fakultasId;
+            
+            // Filter dosen by fakultas first
+            filterDosenByFakultas(document.getElementById('editFakultas'), 'editKepalaProdi');
+            
+            // Set kepala prodi after a short delay to ensure options are filtered
+            setTimeout(() => {
+                document.getElementById('editKepalaProdi').value = kepalaProdiId || '';
+            }, 100);
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
     </script>

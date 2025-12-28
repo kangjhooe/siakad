@@ -63,7 +63,7 @@ class ExportController extends Controller
         }
 
         // Reload with all necessary relationships
-        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'dosenPa.user', 'user'])
+        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'prodi.kepalaProdi.user', 'dosenPa.user', 'user'])
             ->findOrFail($mahasiswa->id);
 
         // Check if student has approved KRS for this semester
@@ -107,7 +107,7 @@ class ExportController extends Controller
         }
 
         // Reload with all necessary relationships
-        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'dosenPa.user', 'user'])
+        $mahasiswa = Mahasiswa::with(['prodi.fakultas', 'prodi.kepalaProdi.user', 'dosenPa.user', 'user'])
             ->findOrFail($mahasiswa->id);
 
         // Get active tahun akademik

@@ -11,8 +11,9 @@
         .header-logo { flex-shrink: 0; }
         .header-logo img { max-width: 80px; max-height: 80px; object-fit: contain; }
         .header-content { flex: 1; text-align: center; }
-        .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
-        .header h2 { font-size: 14pt; font-weight: normal; margin-bottom: 5px; }
+        .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .header h2 { font-size: 15pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .header h3 { font-size: 13pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         .header p { font-size: 10pt; color: #333; }
         .title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; text-transform: uppercase; letter-spacing: 2px; }
         .info-table { width: 100%; margin-bottom: 20px; }
@@ -50,6 +51,17 @@
         $pt = \App\Models\PerguruanTinggi::getInstance();
         $hasLogo = $pt->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($pt->logo_path);
         $logoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::url($pt->logo_path) : null;
+        
+        // Ensure relationships are loaded
+        $mahasiswa->loadMissing(['prodi.fakultas']);
+        
+        $namaFakultas = $mahasiswa->prodi && $mahasiswa->prodi->fakultas 
+            ? strtoupper($mahasiswa->prodi->fakultas->nama ?? $mahasiswa->prodi->fakultas->nama_fakultas) 
+            : 'FAKULTAS';
+        
+        $namaProdi = $mahasiswa->prodi 
+            ? strtoupper($mahasiswa->prodi->nama) 
+            : 'PROGRAM STUDI';
     @endphp
     <div class="header">
         @if($hasLogo)
@@ -59,8 +71,9 @@
         @endif
         <div class="header-content">
             <h1>{{ $pt->nama }}</h1>
-            <h2>{{ $mahasiswa->prodi->fakultas->nama_fakultas ?? 'FAKULTAS' }}</h2>
-            <p>
+            <h2>{{ $namaFakultas }}</h2>
+            <h3>{{ $namaProdi }}</h3>
+            <p style="font-size: 10pt; color: #333; margin-top: 5px;">
                 @if($pt->alamat){{ $pt->alamat }}@endif
                 @if($pt->kota){{ $pt->alamat ? ', ' : '' }}{{ $pt->kota }}@endif
                 @if($pt->provinsi){{ ($pt->alamat || $pt->kota) ? ', ' : '' }}{{ $pt->provinsi }}@endif
@@ -172,7 +185,7 @@
     <div class="footer">
         <div></div>
         <div class="signature">
-            Kota Akademik, {{ now()->format('d F Y') }}<br>
+            {{ $pt->kota ?? 'Kota Akademik' }}, {{ now()->format('d F Y') }}<br>
             Dekan,
             <div class="line">
                 <strong>_______________________</strong><br>

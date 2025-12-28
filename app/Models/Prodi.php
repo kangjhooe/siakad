@@ -14,6 +14,7 @@ class Prodi extends Model
     protected $fillable = [
         'fakultas_id',
         'nama',
+        'kepala_prodi_id',
     ];
 
     public function fakultas()
@@ -29,5 +30,13 @@ class Prodi extends Model
     public function dosen()
     {
         return $this->hasMany(Dosen::class);
+    }
+
+    /**
+     * Kepala Program Studi (dosen yang diangkat sebagai kaprodi)
+     */
+    public function kepalaProdi()
+    {
+        return $this->belongsTo(Dosen::class, 'kepala_prodi_id');
     }
 }

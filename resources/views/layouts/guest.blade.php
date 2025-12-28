@@ -15,6 +15,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased text-gray-900 bg-white dark:bg-gray-900 selection:bg-siakad-primary selection:text-white">
+    @php
+        $pt = \App\Models\PerguruanTinggi::getInstance();
+        $hasLogo = $pt->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($pt->logo_path);
+        $logoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::url($pt->logo_path) : null;
+    @endphp
+
     <div class="min-h-screen flex">
         
         <!-- Left Side - Form -->
@@ -22,9 +28,13 @@
             <!-- Mobile Logo -->
             <div class="lg:hidden absolute top-8 left-8">
                 <a href="/" class="flex items-center gap-2">
-                    <div class="w-10 h-10 rounded-xl bg-siakad-primary flex items-center justify-center text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    </div>
+                    @if($hasLogo)
+                        <img src="{{ $logoUrl }}" alt="Logo" class="w-10 h-10 rounded-xl object-contain">
+                    @else
+                        <div class="w-10 h-10 rounded-xl bg-siakad-primary flex items-center justify-center text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        </div>
+                    @endif
                     <span class="font-bold text-xl text-siakad-dark dark:text-white">{{ config('app.name') }}</span>
                 </a>
             </div>
@@ -54,11 +64,15 @@
                 <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden group hover:bg-white/10 transition-colors duration-500">
                     <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                     
-                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-cyan-300 rounded-2xl mx-auto mb-8 flex items-center justify-center shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-500">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-cyan-300 rounded-2xl mx-auto mb-8 flex items-center justify-center shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-500 overflow-hidden">
+                        @if($hasLogo)
+                            <img src="{{ $logoUrl }}" alt="Logo" class="w-full h-full object-contain p-2">
+                        @else
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        @endif
                     </div>
 
-                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Kulim SIAKAD-AI</h2>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">{{ $pt->nama ?? config('app.name') }}</h2>
                     <p class="text-indigo-100/80 text-lg leading-relaxed">
                         Platform manajemen akademik modern berbasis AI untuk efisiensi dan transparansi pendidikan tinggi.
                     </p>

@@ -374,14 +374,24 @@
                    style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
                 
                 <!-- Logo -->
+                @php
+                    $pt = \App\Models\PerguruanTinggi::getInstance();
+                    $hasLogo = $pt->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($pt->logo_path);
+                    $logoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::url($pt->logo_path) : null;
+                @endphp
                 <div class="h-16 flex items-center justify-between px-4 logo-section" style="border-bottom: 1px solid var(--border-color);">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <button @click="if(!sidebarOpen) sidebarOpen = true" :class="!sidebarOpen ? 'cursor-pointer hover:bg-siakad-primary/80' : 'cursor-default'" class="w-9 h-9 rounded-lg bg-siakad-primary flex items-center justify-center flex-shrink-0 transition">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        <button @click="if(!sidebarOpen) sidebarOpen = true" :class="!sidebarOpen ? 'cursor-pointer hover:bg-siakad-primary/80' : 'cursor-default'" class="w-9 h-9 rounded-lg bg-siakad-primary flex items-center justify-center flex-shrink-0 transition overflow-hidden">
+                            @if($hasLogo)
+                                <img src="{{ $logoUrl }}" alt="Logo" class="w-full h-full object-contain p-1">
+                            @else
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            @endif
                         </button>
                         <div class="sidebar-logo-text">
-                            <h1 class="text-base font-semibold" style="color: var(--text-primary);">{{ config('app.name') }}</h1>
+                            <h1 class="text-base font-semibold" style="color: var(--text-primary);">{{ $pt->nama ?? config('app.name') }}</h1>
                             <p class="text-[11px] tracking-wide" style="color: var(--text-secondary);">Academic Management</p>
                         </div>
                     </div>

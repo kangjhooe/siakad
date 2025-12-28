@@ -11,8 +11,9 @@
         .header-logo { flex-shrink: 0; }
         .header-logo img { max-width: 80px; max-height: 80px; object-fit: contain; }
         .header-content { flex: 1; text-align: center; }
-        .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
-        .header h2 { font-size: 14pt; font-weight: normal; margin-bottom: 5px; }
+        .header h1 { font-size: 16pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .header h2 { font-size: 15pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .header h3 { font-size: 13pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         .header p { font-size: 10pt; color: #333; }
         .title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; text-transform: uppercase; letter-spacing: 2px; }
         .subtitle { text-align: center; font-size: 12pt; margin-bottom: 20px; }
@@ -50,15 +51,23 @@
         $logoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::url($pt->logo_path) : null;
         
         // Ensure relationships are loaded
-        $mahasiswa->loadMissing(['prodi.fakultas']);
+        $mahasiswa->loadMissing(['prodi.fakultas', 'prodi.kepalaProdi.user']);
         
         $namaFakultas = $mahasiswa->prodi && $mahasiswa->prodi->fakultas 
-            ? $mahasiswa->prodi->fakultas->nama 
+            ? strtoupper($mahasiswa->prodi->fakultas->nama) 
             : 'FAKULTAS';
         
         $namaProdi = $mahasiswa->prodi 
-            ? $mahasiswa->prodi->nama 
+            ? strtoupper($mahasiswa->prodi->nama) 
             : 'PROGRAM STUDI';
+        
+        $kepalaProdi = $mahasiswa->prodi && $mahasiswa->prodi->kepalaProdi && $mahasiswa->prodi->kepalaProdi->user
+            ? $mahasiswa->prodi->kepalaProdi->user->name
+            : null;
+        
+        $kepalaProdiNidn = $mahasiswa->prodi && $mahasiswa->prodi->kepalaProdi
+            ? $mahasiswa->prodi->kepalaProdi->nidn
+            : null;
     @endphp
     <div class="header">
         @if($hasLogo)
@@ -69,7 +78,7 @@
         <div class="header-content">
             <h1>{{ $pt->nama }}</h1>
             <h2>{{ $namaFakultas }}</h2>
-            <h3 style="font-size: 12pt; font-weight: normal; margin-bottom: 5px;">{{ $namaProdi }}</h3>
+            <h3>{{ $namaProdi }}</h3>
             <p style="font-size: 10pt; color: #333; margin-top: 5px;">
                 @if($pt->alamat){{ $pt->alamat }}@endif
                 @if($pt->kota){{ $pt->alamat ? ', ' : '' }}{{ $pt->kota }}@endif
@@ -198,11 +207,11 @@
             </div>
         </div>
         <div class="signature">
-            Kota Akademik, {{ now()->format('d F Y') }}<br>
+            {{ $pt->kota ?? 'Kota Akademik' }}, {{ now()->format('d F Y') }}<br>
             Ketua Program Studi
             <div class="line">
-                <strong>_______________________</strong><br>
-                NIP. ___________________
+                <strong>{{ $kepalaProdi ?? '_______________________' }}</strong><br>
+                NIDN. {{ $kepalaProdiNidn ?? '___________________' }}
             </div>
         </div>
     </div>
